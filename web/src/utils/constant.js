@@ -1,0 +1,4 @@
+export const constant = {
+    MONACO_COMPLETION: 'MONACO_COMPLETION',
+    ENABLE_DEBUG: 'ENABLE_DEBUG'
+}
