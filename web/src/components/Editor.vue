@@ -3,7 +3,7 @@
     v-model="editorContent"
     :language="editorLanguage"
     @change="changeData"
-    :theme="theme"
+    :theme="vsCodeTheme"
     @editor-mounted="editorMounted"
   ></monacoEditor>
 </template>
@@ -24,7 +24,7 @@ const props = defineProps({
   },
   theme: {
     type: String,
-    default: 'vs-dark',
+    default: 'myCustomTheme',
   },
   title: {
     type: String,
@@ -32,6 +32,11 @@ const props = defineProps({
   },
 })
 
+const vsCodeTheme = ref(
+  window.posttiger
+    .db('ElementUiThemePlugins')
+    .collection.findOne({ type: 'vscodeTheme' })?.data || props.theme,
+)
 const editorLanguage = ref(props.language)
 const editorContent = ref(props.code)
 
@@ -56,6 +61,27 @@ const editorMounted = (editor) => {
           ElMessage.error('格式化错误\n' + error)
         })
     }, // 点击后执行的操作
+  })
+  editor.addAction({
+    id: 'wordWrap', // 菜单项 id
+    label: '自动换行', // 菜单项名称
+    contextMenuGroupId: 'navigation', // 所属菜单的分组
+    run: () => {
+      editor.updateOptions({
+        wordWrap: 'on',
+        wrappingIndent: 'none',
+      })
+    },
+  })
+  editor.addAction({
+    id: 'noWordWrap', // 菜单项 id
+    label: '取消自动换行', // 菜单项名称
+    contextMenuGroupId: 'navigation', // 所属菜单的分组
+    run: () => {
+      editor.updateOptions({
+        wordWrap: 'off',
+      })
+    },
   })
   editor.addAction({
     id: 'formatBack', // 菜单项 id
@@ -100,6 +126,12 @@ const emit = defineEmits(['changeData'])
 const changeData = (value) => {
   emit('changeData', value)
 }
+
+onUnmounted(() => {
+  window.bus.on('themePlugin:changeVsCodeThemeName', (data) => {
+    vsCodeTheme.value = data
+  })
+})
 </script>
 
 <style>

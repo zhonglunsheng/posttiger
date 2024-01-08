@@ -1,0 +1,89 @@
+{
+  "apiVersion": "0.3.0",
+  "method": "GET",
+  "path": "/user/:username",
+  "title": "Get User Information",
+  "group": "User",
+  "description": "Retrieve information about a user.",
+  "headers": [
+    {
+      "name": "Authorization",
+      "description": "The token can be generated from your user profile.",
+      "type": "String"
+    },
+    {
+      "name": "X-Apidoc-Cool-Factor",
+      "description": "Some other header with a default value.",
+      "type": "String",
+      "defaultValue": "big"
+    }
+  ],
+  "param": [
+    {
+      "name": "username",
+      "type": "String",
+      "description": "Username"
+    }
+  ],
+  "paramExample": {
+    "userName": "Eve"
+  },
+  "examples": [
+    {
+      "name": "bash",
+      "type": "bash",
+      "content": "curl -H \"Authorization: token 5f048fe\" -i https://api.example.com/user/fr-par/4711"
+    },
+    {
+      "name": "js",
+      "type": "js",
+      "content": "const client = AcmeCorpApi('5f048fe');\nconst user = client.getUser(42);"
+    },
+    {
+      "name": "python",
+      "type": "python",
+      "content": "client = AcmeCorpApi.Client(token='5f048fe')\nuser = client.get_user(42)"
+    }
+  ],
+  "success": [
+    {
+      "name": "userName",
+      "type": "String",
+      "description": "Username"
+    },
+    {
+      "name": "createTime",
+      "type": "String",
+      "description": "Creation time"
+    },
+    {
+      "name": "updateTime",
+      "type": "String",
+      "description": "Update time"
+    }
+  ],
+  "successExample": {
+    "name": "200",
+    "content": {
+      "status": "success",
+      "data": {
+        "translatedText": "Quick visit API tool",
+        "detectedSourceLanguage": {
+          "code": "zh-CN",
+          "name": "Chinese (Simplified)"
+        }
+      }
+    }
+  },
+  "error": [
+    {
+      "name": "message",
+      "type": "String",
+      "description": "Error message"
+    }
+  ],
+  "errorExample": {
+    "name": "Response (example)",
+    "content": "HTTP/1.1 401 Not Authenticated\n{\n  \"error\": \"NoAccessRight\"\n}"
+  }
+}

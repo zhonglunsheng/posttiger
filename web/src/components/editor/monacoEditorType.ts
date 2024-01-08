@@ -37,9 +37,6 @@ export const editorProps = {
   },
   theme: {
     type: String as PropType<Theme>,
-    validator(value: string): boolean {
-      return ['vs', 'hc-black', 'vs-dark'].includes(value)
-    },
     default: 'vs-dark',
   },
   options: {

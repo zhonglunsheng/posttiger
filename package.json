@@ -1,19 +1,57 @@
 {
-  "name": "online-api",
-  "version": "1.0.0",
-  "description": "在线API管理和调试",
+  "name": "posttiger",
+  "version": "1.0.0-beta.0",
+  "author": "zhonglunsheng",
+  "description": "An out-of-the-box online debugging API tool based on a web browser",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon ./bin/www"
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/zhonglunsheng/posttiger.git"
   },
-  "author": "",
-  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zhonglunsheng/posttiger/issues"
+  },
+  "keywords": [
+    "http",
+    "https",
+    "api",
+    "web",
+    "posttiger"
+  ],
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "files": [
+    "lib",
+    "bin",
+    "doc"
+  ],
+  "engines": {
+    "node": ">=v16.14.2"
+  },
+  "contributors": [
+    {
+      "name": "zhonglunsheng",
+      "email": "zhonglunsheng@gmail.com"
+    }
+  ],
   "dependencies": {
+    "@juln/curl-to-json": "^1.0.6",
+    "apidoc": "^1.2.0",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "http-proxy-middleware": "^2.0.6",
-    "request": "^2.88.2"
+    "express-fileupload": "^1.4.3",
+    "lokijs": "^1.5.12",
+    "optimist": "^0.6.1",
+    "uuid": "^9.0.1"
+  },
+  "license": "MIT",
+  "preferGlobal": true,
+  "bin": {
+    "posttiger": "./bin/posttiger"
+  },
+  "devDependencies": {
+    "@types/apidoc": "^0.50.3"
   }
 }

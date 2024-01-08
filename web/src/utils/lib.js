@@ -162,6 +162,40 @@ const treeToArray = (tree) => {
   return array
 }
 
+const findParentNodeByTree = (tree, targetId, parents = []) => {
+  for (const node of tree) {
+    if (node.id === targetId) {
+      let nodeCopyInfo = { ...node }
+      delete nodeCopyInfo['children']
+      parents.push(nodeCopyInfo)
+      return parents
+    } else if (node.children) {
+      console.log('递归查找子节点')
+      // 如果有子节点，则递归查找子节点
+      const found = findParentNodeByTree(node.children, targetId, parents)
+      if (found.length > 0) {
+        // 如果找到目标节点，返回当前父节点
+        let nodeCopyInfo = { ...node }
+        delete nodeCopyInfo['children']
+        parents.push(nodeCopyInfo)
+        return parents
+      }
+    }
+  }
+  return parents
+}
+
+const findParentNodeByTreeByNodeType = (tree, targetId, nodeType) => {
+  let parents = []
+  parents = findParentNodeByTree(tree, targetId, parents)
+  console.log(parents)
+  // 遍历parents 获取对应的类型
+  let parent = parents.find((item) => {
+    return item['nodeType'] === nodeType
+  })
+  return parent
+}
+
 const func = {
   util: {
     getScriptNextId: () => {
@@ -187,6 +221,10 @@ const func = {
     buildTree: buildTree,
 
     treeToArray: treeToArray,
+
+    findParentNodeByTreeByNodeType: findParentNodeByTreeByNodeType,
+
+    findParentNodeByTree: findParentNodeByTree,
   },
 }
 

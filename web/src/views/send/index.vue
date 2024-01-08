@@ -1,37 +1,76 @@
 <template>
   <div v-if="showDetail">
     <el-row style="margin-bottom: 10px">
-      <el-col :span="6">
+      <el-col :span="12">
         <el-input v-model="apiInfo.label" placeholder="Please input">
           <template #prepend>接口名称</template>
         </el-input>
       </el-col>
     </el-row>
     <el-row :gutter="20">
-      <el-col :span="18">
-        <el-input
-          v-model="apiInfo.url"
-          placeholder="接口请求地址"
-          style="width:"
-        >
-          <template #prepend>
+      <el-col :span="16">
+        <el-row>
+          <el-col :span="3">
             <el-select
               v-model="apiInfo.method"
               placeholder="请求方式"
-              style="width: 115px"
+              style="width: 100%"
             >
               <el-option label="GET" value="GET" />
               <el-option label="POST" value="POST" />
               <el-option label="PUT" value="PUT" />
               <el-option label="DELETE" value="DELETE" />
             </el-select>
-          </template>
-        </el-input>
+          </el-col>
+          <el-col :span="21">
+            <auto-complete
+              :data="apiInfo.url"
+              @change-data="
+                (data) => {
+                  apiInfo.url = data
+                }
+              "
+            ></auto-complete>
+          </el-col>
+        </el-row>
+
+        <!--        <el-input v-model="apiInfo.url" placeholder="接口请求地址">-->
+        <!--          <template #prepend>-->
+        <!--            <el-select-->
+        <!--              v-model="apiInfo.method"-->
+        <!--              placeholder="请求方式"-->
+        <!--              style="width: 115px"-->
+        <!--            >-->
+        <!--              <el-option label="GET" value="GET" />-->
+        <!--              <el-option label="POST" value="POST" />-->
+        <!--              <el-option label="PUT" value="PUT" />-->
+        <!--              <el-option label="DELETE" value="DELETE" />-->
+        <!--            </el-select>-->
+        <!--          </template>-->
+        <!--        </el-input>-->
       </el-col>
-      <el-col :span="6">
+      <el-col :span="8">
         <el-button type="success" @click="send">发送</el-button>
         <el-button type="primary" @click="savaApiInfo">保存</el-button>
-        <el-button type="primary">保存副本</el-button>
+        <el-button type="primary" @click="cloneApi">克隆</el-button>
+        <el-button type="warning" @click="recyclingAPI">回收站</el-button>
+        <el-dropdown style="margin-left: 5px">
+          <el-button type="primary">
+            更多
+            <el-icon class="el-icon--right"><arrow-down /></el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="closeApiTabList">
+                关闭所有标签
+              </el-dropdown-item>
+              <el-dropdown-item>Action 2</el-dropdown-item>
+              <el-dropdown-item>Action 3</el-dropdown-item>
+              <el-dropdown-item>Action 4</el-dropdown-item>
+              <el-dropdown-item>Action 5</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </el-col>
     </el-row>
 
@@ -76,27 +115,31 @@
           ></Editor>
         </div>
       </el-tab-pane>
-      <el-tab-pane label="插件管理" name="插件管理">
-        <config-editor v-if="activeName === '插件管理'"></config-editor>
+      <el-tab-pane label="插件扩展" name="插件扩展">
+        <plugin-editor v-if="activeName === '插件扩展'"></plugin-editor>
       </el-tab-pane>
       <el-tab-pane label="配置管理" name="配置管理">
         <config v-if="activeName === '配置管理'"></config>
       </el-tab-pane>
+      <el-tab-pane label="插件开发" name="插件开发">
+        <variable-plugin
+          v-if="activeName === '插件开发'"
+          dataKey="test-config"
+          :get-config-data-json="() => {}"
+        ></variable-plugin>
+      </el-tab-pane>
     </el-tabs>
 
-    <el-row>
+    <el-row v-if="activeName !== '插件开发' && activeName !== '插件扩展'">
       <el-col :span="24">
-        <el-tabs
-          v-model="activeResName"
-          class="demo-tabs"
-          @tab-click="handleClick"
-        >
-          <el-tab-pane label="返回值" name="返回值">
+        <el-tabs v-model="activeResName" class="demo-tabs">
+          <el-tab-pane :label="`响应内容`" name="响应内容">
             <div
               style="height: 40vh; margin-top: 10px; margin-bottom: 5px"
-              v-if="showEditor"
+              v-loading="loading"
             >
               <Editor
+                v-if="showEditor"
                 @changeData="
                   (value) => {
                     apiInfo.response = value
@@ -107,11 +150,42 @@
               ></Editor>
             </div>
           </el-tab-pane>
+          <el-tab-pane label="响应json可视化" name="响应json可视化">
+            <json-editor
+              class="json"
+              name="body"
+              v-model="jsonEditorContent"
+            ></json-editor>
+          </el-tab-pane>
           <el-tab-pane label="请求头" name="请求头">
-            <pre>{{ apiInfo.requestHeader }}</pre>
+            <pre class="pre-code">{{ apiInfo.requestHeader }}</pre>
           </el-tab-pane>
           <el-tab-pane label="响应头" name="响应头">
-            <pre>{{ apiInfo.responseHeader }}</pre>
+            <pre class="pre-code">{{ apiInfo.responseHeader }}</pre>
+
+            <div>
+              <el-text class="mx-1" type="primary">
+                接口耗时：{{ coastTime }}ms
+              </el-text>
+              <br />
+              <el-text class="mx-1" type="primary">
+                返回大小：{{ contentSize }}
+              </el-text>
+              <br />
+              <el-text class="mx-1" type="primary">
+                响应状态码：{{ contentResponseStatus }}
+              </el-text>
+            </div>
+          </el-tab-pane>
+          <el-tab-pane label="请求快照" name="请求快照">
+            请求地址：
+            <pre class="pre-code">{{ apiRequestASnapshot.url }}</pre>
+            请求头：
+            <pre class="pre-code">{{ apiRequestASnapshot.headers }}</pre>
+            查询参数：
+            <pre class="pre-code">{{ apiRequestASnapshot.queryParams }}</pre>
+            请求体：
+            <pre class="pre-code">{{ apiRequestASnapshot.requestBody }}</pre>
           </el-tab-pane>
         </el-tabs>
       </el-col>
@@ -120,71 +194,124 @@
 </template>
 
 <script setup>
-import { computed, ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import {
+  computed,
+  ref,
+  reactive,
+  onMounted,
+  onBeforeUnmount,
+  watchEffect,
+} from 'vue'
 import Editor from '@/components/Editor.vue'
 import ConfigEditor from '@/views/json/index.vue'
 import Config from '@/views/config/index.vue'
 import { sendApi } from '@/api/proxy'
+import AutoComplete from '@/components/AutoComplete.vue'
+// import VariablePlugin from '@/plugins/CurlImportPlugins.vue'
+import VariablePlugin from '@/plugins/ApiDocPlugins.vue'
+// import VariablePlugin from '@/components/ConfigEditor.vue'
+import PluginEditor from '@/views/plugin/manage.vue'
 const props = defineProps({
   apiInfoProps: Object,
 })
-const enterContent = ref('223')
-const apiMethod = ref('GET')
 const activeName = ref('请求体')
-const activeResName = ref('返回值')
-// const apiInfo = ref({
-//   id: 1000,
-//   parentId: 0,
-//   label: '',
-//   method: 'POST',
-//   url: 'https://api.juejin.cn/content_api/v2/article/column?aid=2608&uuid=7167611863961699873&spider=0',
-//   headers: '{}',
-//   response: '',
-//   requestBody: '{"article_id":"7073764210039062559","cursor":"0","limit":10}',
-//   queryParams: '{}',
-//   requestHeader: {},
-//   responseHeader: {},
-// })
-const apiInfo = ref(
-  props.apiInfoProps || {
-    id: 1000,
-    parentId: 0,
-    label: '',
-    method: 'POST',
-    url: 'https://api.juejin.cn/content_api/v2/article/column?aid=2608&uuid=7167611863961699873&spider=0',
-    headers: '{}',
-    response: '',
-    requestBody: '{"article_id":"7073764210039062559","cursor":"0","limit":10}',
-    queryParams: '{}',
-    requestHeader: {},
-    responseHeader: {},
-  },
-)
+const activeResName = ref('响应内容')
+
+const coastTime = ref(0)
+const contentSize = ref('')
+const contentResponseStatus = ref(undefined)
+const apiInfo = ref(props.apiInfoProps || {})
+
+const calculateTheResponseContentSize = (text) => {
+  function formatBytes(bytes) {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+
+    if (bytes === 0) return '0 Byte'
+
+    const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)))
+
+    return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + sizes[i]
+  }
+
+  const encoder = new TextEncoder()
+  const bytes = encoder.encode(text)
+  const byteSize = bytes.length
+  console.log(byteSize)
+  return formatBytes(byteSize)
+}
+
+const apiRequestASnapshot = ref({})
+const loading = ref(false)
+
 const send = () => {
   let apiInfoCopy = JSON.parse(JSON.stringify(apiInfo.value))
   apiInfoCopy.headers = apiInfoCopy.headers
     ? JSON.parse(apiInfoCopy.headers)
     : {}
-  apiInfoCopy.requestBody = apiInfoCopy.requestBody
-    ? JSON.parse(apiInfoCopy.requestBody)
-    : {}
+  try {
+    loading.value = true
+    apiInfoCopy.requestBody = apiInfoCopy.requestBody
+      ? JSON.parse(apiInfoCopy.requestBody)
+      : {}
+  } catch (e) {
+    // ignore
+  }
   apiInfoCopy.queryParams = apiInfoCopy.queryParams
     ? JSON.parse(apiInfoCopy.queryParams)
     : {}
+  console.log(apiInfoCopy)
+  // 接口发送前处理插件扩展函数
+  window.posttiger.plugins.forEach((plugin) => {
+    plugin.beforePost(apiInfoCopy)
+  })
+  apiRequestASnapshot.value = apiInfoCopy
+  let start = new Date().getTime()
   sendApi(apiInfoCopy)
     .then((res) => {
+      coastTime.value = new Date().getTime() - start
       console.log(res)
       console.log(res.headers)
       apiInfo.value.response =
         typeof res.data === 'object'
           ? JSON.stringify(res.data, null, 2)
           : res.data
+      // 计算大小
+      contentSize.value = calculateTheResponseContentSize(
+        apiInfo.value.response,
+      )
+      // 响应状态码
+      contentResponseStatus.value = res.status
       apiInfo.value.requestHeader = JSON.stringify(res.config.headers, null, 2)
       apiInfo.value.responseHeader = JSON.stringify(res.headers, null, 2)
       refreshEditor()
+      loading.value = false
     })
-    .catch((e) => {
-      console.log(e)
+    .catch((error) => {
+      loading.value = false
+      if (!error.response?.data) {
+        window.services.ui.ElMessage.error(
+          '接口异常，无数据返回，请查看控制台！！！',
+        )
+        return
+      }
+      console.log(error)
+      contentResponseStatus.value = error.response.status
+      apiInfo.value.response =
+        typeof error.response.data === 'object'
+          ? JSON.stringify(error.response.data, null, 2)
+          : error.response.data
+
+      apiInfo.value.requestHeader = JSON.stringify(
+        error.config.headers,
+        null,
+        2,
+      )
+      apiInfo.value.responseHeader = JSON.stringify(
+        error.response.headers,
+        null,
+        2,
+      )
+      refreshEditor()
     })
 }
 
@@ -198,6 +325,29 @@ const refreshEditor = () => {
 
 import bus from 'vue3-eventbus'
 import { lib } from '@/utils/lib'
+import { constant } from '@/utils/constant.js'
+import JsonEditor from '@/components/JsonEditor.vue'
+const recyclingAPI = () => {
+  console.log(apiInfo.value)
+  let copyApiInfo = apiInfo.value
+  // // 判断是否存在api 如果不存在 则保存
+  // let findOne = window.posttiger
+  //   .db(constant.COLLECTION.API_LIST)
+  //   .collection.findOne({ id: copyApiInfo.id })
+  // 修改parentId 然后保存
+  copyApiInfo.parentId = constant.COMMON.RECYCLE_ID
+  savaApiInfo()
+  // 发布加入回收站事件
+  bus.emit(constant.BUS.ADD_TO_THE_RECYCLE_BIN, copyApiInfo)
+}
+
+const closeApiTabList = () => {
+  // 关闭所有标签列表
+  bus.emit(constant.BUS.CLOSE_ALL_TAB_LIST, {})
+}
+const cloneApi = () => {
+  bus.emit(constant.BUS.CLONE_API, () => {})
+}
 onMounted(() => {
   bus.on('openApiDetail', (node) => {
     console.log('收到api打开广播')
@@ -224,8 +374,31 @@ const reloadPage = () => {
 }
 
 const savaApiInfo = () => {
-  console.log(apiInfo.value)
-  lib.config.updateApiInfoById({ ...apiInfo.value })
+  console.log('savaApiInfo', apiInfo.value)
+  window.posttiger
+    .db('apiList')
+    .insertOrUpdate({ id: apiInfo.value.id }, apiInfo.value)
   bus.emit('saveApi', apiInfo.value)
+  window.services.ui.ElMessage.success('保存成功')
 }
+
+const jsonEditorContent = ref({})
+
+watchEffect(() => {
+  let responseData = apiInfo.value.response
+  let data = ''
+  try {
+    data = JSON.parse(responseData)
+  } catch (e) {
+    //ignore
+  }
+  if (data) {
+    jsonEditorContent.value = JSON.stringify(data)
+  }
+})
 </script>
+<style scoped>
+.pre-code {
+  white-space: pre-wrap !important;
+}
+</style>

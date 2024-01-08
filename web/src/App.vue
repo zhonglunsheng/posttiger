@@ -5,139 +5,59 @@ import SendForm from '@/views/send/index.vue'
 import SendFormTabs from '@/views/send/tabs.vue'
 import Slider from '@/views/slider/index.vue'
 import bus from 'vue3-eventbus'
-
-const sfc = ref(`
-<template>
-  <div>
-
-  </div>
-</template>
-<script>
-  export default {
-    components: {},
-    props: [],
-    data() {
-      return {
-      }
-    },
-    computed: {},
-    watch: {
-    },
-    created() {},
-    mounted() {
-      window.posttiger = {}
-      window.posttiger.plugins = {
-        't1': {
-          execute: () => {
-            console.log('t1 plugins')
-          }
-        }
-      }
-    },
-    unmounted () {
-        
-    },
-    methods: {
-
-    },
-  }
-
-`)
-
-const sfc2 = ref(`
-<template>
-  <div>
-sfcssdd
-  </div>
-</template>
-<script>
-  export default {
-    components: {},
-    props: [],
-    data() {
-      return {
-      }
-    },
-    computed: {},
-    watch: {
-    },
-    created() {},
-    mounted() {
-      window.posttiger = {}
-      window.posttiger.plugins = {
-        't2': {
-          execute: (cb) => {
-            console.log('t1 plugins')
-            return 'res t1 plugins'
-          }
-        }
-      }
-    },
-    unmounted () {
-      window.posttiger = {}
-    },
-    methods: {
-
-    },
-  }
-`)
-
-const pluginsConfigSwitch = () => {
-  status.value = !status.value
-  // delete window.posttiger.plugins['t1']
-
-  // 模拟发送请求事件
-  let plugins = window.posttiger.plugins
-  for (let plugin in plugins) {
-    let res = plugins[plugin]['execute']()
-    console.log(res)
-  }
-}
-
-const status = ref(true)
-
-// 初始化插件
-if (!window.posttiger) {
-  window.posttiger = {}
-}
-if (!window.posttiger.plugins) {
-  window.posttiger.plugins = []
-}
+import { constant } from '@/utils/constant.js'
+//
+// const pluginsConfigSwitch = () => {
+//   status.value = !status.value
+//   // delete window.posttiger.plugins['t1']
+//
+//   // 模拟发送请求事件
+//   let plugins = window.posttiger.plugins
+//   for (let plugin in plugins) {
+//     let res = plugins[plugin]['execute']()
+//     console.log(res)
+//   }
+// }
+//
+// const status = ref(true)
+//
+// // 初始化插件
+// if (!window.posttiger) {
+//   window.posttiger = {}
+// }
+// if (!window.posttiger.plugins) {
+//   window.posttiger.plugins = []
+// }
 
 // 注册插件
-import { lib } from '@/utils/lib'
-let plugins = lib.config.getConfigNestedValue('plugins') || []
-console.log(plugins)
-const enablePlugins = reactive([])
 window.posttiger.plugins = []
 window.posttiger.register = (plugin) => {
+  let plugins = window.posttiger.plugins
   // 判断当前plugins是否存在插件名称 存在则删除 重新注册
-  let dbPluginInfo = plugins.filter((p) => {
+  let existPluginInfo = plugins.filter((p) => {
     return p.name === plugin.name
   })
-  if (!dbPluginInfo.length) {
-    return
-  }
-  let existPluginInfo = window.posttiger.plugins.filter((p) => {
-    return p.name === plugin.name
-  })
-  if (existPluginInfo.length) {
+  if (existPluginInfo.length > 0) {
     // 移除
     window.posttiger.plugins = window.posttiger.plugins.filter((p) => {
       return p.name !== plugin.name
     })
   }
   // 加入 判断是否启用
-  if (dbPluginInfo[0].enable) {
+  if (plugin.enable) {
+    console.log('注册插件', plugin)
     window.posttiger.plugins.push(plugin)
+    // 排序
+    window.posttiger.plugins.sort((a, b) => {
+      // order越大优先级越大，没有设置默认最小
+      let aOrder = a?.order || 1
+      let bOrder = b?.order || 1
+      return aOrder - bOrder
+    })
   }
 }
 
-for (let item of plugins) {
-  if (item?.enable) {
-    window.posttiger.plugins.push(item)
-  }
-}
+// 加载插件列表
 
 import 'ninja-keys'
 const hotkeys = ref([
@@ -146,49 +66,264 @@ const hotkeys = ref([
     title: '保存当前API',
     hotkey: 'ctrl+s',
     handler: () => {
-      console.log('保存当前API')
       bus.emit('keymap-save-current-api-tabs', {})
     },
   },
   {
-    id: 'Open Projects',
-    title: 'Open Projects',
-    hotkey: 'ctrl+shift+w+q',
+    id: '新建接口',
+    title: '新建接口',
+    hotkey: 'ctrl+u',
     handler: () => {
-      console.log('navigation to projects')
+      bus.emit(constant.BUS.NEW_API_TAB, {})
     },
   },
   {
-    id: 'Theme',
-    title: 'Change theme...',
-    children: [
-      {
-        id: 'Light Theme',
-        title: 'Change theme to Light',
-        handler: () => {
-          console.log('theme light')
-        },
-      },
-      {
-        id: 'Dark Theme',
-        title: 'Change theme to Dark',
-        keywords: 'lol',
-        handler: () => {
-          console.log('theme dark')
-        },
-      },
-    ],
+    id: '接口管理',
+    title: '接口管理',
+    hotkey: 'ctrl+u',
+    handler: () => {
+      bus.emit(constant.BUS.NEW_API_TAB, {})
+    },
   },
 ])
+
+// Import component
+import Loading from 'vue3-loading-overlay'
+// Import stylesheet
+import 'vue3-loading-overlay/dist/vue3-loading-overlay.css'
+
+const dbLoadingFinish = ref(false)
+onMounted(() => {
+  bus.on('dbLoadingFinish', () => {
+    console.log('dbLoadingFinish')
+    dbLoadingFinish.value = true
+    initElementUiCss()
+    loadDbPlugins()
+    loadApiList()
+  })
+  bus.on('themePlugin:changeTheme', (data) => {
+    if (data[0] === 'reset') {
+      // 重置样式
+      document.documentElement.classList.remove('dark')
+      document.documentElement.classList.remove('default')
+      document.documentElement.classList.add(data[1])
+      let cssDict = data[2]
+      for (let item in cssDict) {
+        document.documentElement.style.removeProperty(item)
+        document.documentElement.style.setProperty(item, cssDict[item])
+      }
+      return
+    }
+    if (data[0] === 'themeName') {
+      document.documentElement.classList.remove('dark')
+      document.documentElement.classList.remove('default')
+      document.documentElement.classList.add(data[1])
+      return
+    }
+    console.log('themePlugin:changeTheme')
+    document.documentElement.style.setProperty(data[0], data[1])
+  })
+})
+
+function loadDbPlugins() {
+  let plugins = window.posttiger
+    .db(constant.COLLECTION.API_PLUGINS)
+    .collection.find()
+  let pluginsPane = {
+    id: '插件管理',
+    title: '插件管理',
+    children: [],
+  }
+  for (let item of plugins) {
+    pluginsPane.children.push({
+      id: item.id,
+      title: item.name,
+      handler: () => {
+        loadingPlugin(item.id)
+      },
+    })
+  }
+  console.log(pluginsPane)
+  hotkeys.value.push(pluginsPane)
+}
+
+function loadApiList() {
+  // let plugins = window.posttiger
+  //   .db(constant.COLLECTION.API_PLUGINS)
+  //   .collection.find()
+  // let pluginsPane = {
+  //   id: '接口管理',
+  //   title: '接口管理',
+  //   children: [],
+  // }
+  // for (let item of plugins) {
+  //   pluginsPane.children.push({
+  //     id: item.id,
+  //     title: item.name,
+  //     handler: () => {
+  //       loadingPlugin(item.id)
+  //     },
+  //   })
+  // }
+  // console.log(pluginsPane)
+  hotkeys.value.push({
+    id: '接口管理',
+    title: '接口管理',
+    children: [],
+  })
+}
+
+const openModal = (data) => {
+  console.log(data)
+}
+
+function initElementUiCss() {
+  let elementCss = window.posttiger
+    .db('ElementUiThemePlugins')
+    .collection.findOne({ type: 'element-ui' })
+  console.log('elementCss', elementCss)
+  if (elementCss) {
+    document.documentElement.classList.add(elementCss.themeName)
+    document.documentElement.classList.add(elementCss.themeName)
+    let cssDict = elementCss.cssVariableList
+    console.log(
+      ' document.documentElement.style',
+      document.documentElement.style,
+    )
+    for (let item in cssDict) {
+      document.documentElement.style.removeProperty(item)
+      document.documentElement.style.setProperty(item, cssDict[item])
+    }
+  }
+}
+
+// document.documentElement.classList.add('dark')
+// console.log(document.documentElement)
+// setTimeout(() => {
+//   document.documentElement.style.setProperty('--el-color-primary', 'red')
+// }, 3000)
+
+import jsf from 'json-schema-faker'
+import JsonEditor from '@/components/JsonEditor.vue'
+const schema = {
+  title: 'Pet',
+  type: 'object',
+  required: ['name'],
+  properties: {
+    name: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 25,
+    },
+    type: {
+      type: 'string',
+      enum: ['cat', 'dog', 'fish', 'bird'],
+    },
+    birthdate: {
+      type: 'string',
+      format: 'date',
+    },
+    owner: {
+      title: 'Pet Owner',
+      type: 'object',
+      required: ['name'],
+      properties: {
+        name: {
+          type: 'object',
+          required: ['first', 'last'],
+          properties: {
+            first: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 25,
+            },
+            last: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 25,
+            },
+          },
+        },
+        address: {
+          title: 'Address',
+          type: 'object',
+          properties: {
+            street1: {
+              type: 'string',
+            },
+            street2: {
+              type: 'string',
+            },
+            city: {
+              type: 'string',
+            },
+            state: {
+              type: 'string',
+            },
+            postalCode: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+  },
+}
+const syncValue = jsf.generate(schema)
+console.log('syncValue', syncValue)
+const bodyJson = ref({})
+
+import SfcPlugin from '@/views/plugin/index.vue'
+const showPlugin = ref(false)
+
+const currentPluginId = ref('')
+const loadingPlugin = (id) => {
+  currentPluginId.value = id
+  showPlugin.value = false
+  setTimeout(() => {
+    showPlugin.value = true
+  }, 50)
+}
+
+// let shiftPressed = false
+// let shiftCount = 0
+//
+// document.addEventListener('keydown', function (event) {
+//   if (event.key === 'Shift') {
+//     shiftPressed = true
+//     shiftCount++
+//
+//     if (shiftCount === 2) {
+//       // 弹出提示，可以使用自定义的提示框或者浏览器原生的alert
+//       const ninja = document.querySelector('ninja-keys')
+//       ninja.open()
+//       // alert('Shift键被按了两次！')
+//       shiftCount = 0 // 重置计数
+//     }
+//   }
+// })
+//
+// document.addEventListener('keyup', function (event) {
+//   if (event.key === 'Shift') {
+//     shiftPressed = false
+//   }
+// })
 </script>
 
 <template>
-  <div>
+  <loading :active="!dbLoadingFinish"></loading>
+
+  <div v-if="dbLoadingFinish">
+    <sfc-plugin :id="currentPluginId" v-if="showPlugin"></sfc-plugin>
+
     <ninja-keys
+      id="ninja-keys"
       @selected="selected"
       @change="change"
       :placeholder="placeholder"
+      openHotkey="ctrl+k"
       :data="hotkeys"
+      @open="openModal"
     ></ninja-keys>
 
     <!-- <router-view></router-view> -->
@@ -203,6 +338,13 @@ const hotkeys = ref([
       <custom-form :sfc="item.sfc"></custom-form>
     </div>
     <send-form></send-form> -->
+    <!--    <el-row>-->
+    <!--      <el-col :span="24" style="margin-bottom: 5px">-->
+    <!--        <el-card>-->
+    <!--          <el-button type="primary">插件面板</el-button>-->
+    <!--        </el-card>-->
+    <!--      </el-col>-->
+    <!--    </el-row>-->
     <el-row :gutter="20">
       <el-col :span="6">
         <el-card>
@@ -218,3 +360,8 @@ const hotkeys = ref([
     </el-row>
   </div>
 </template>
+<style>
+ninja-keys {
+  --ninja-z-index: 999;
+}
+</style>

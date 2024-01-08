@@ -24,7 +24,7 @@ request.interceptors.response.use(
     //定义一个变量:存储网络错误信息
     let message = ''
     //http状态码
-    const status = error.response.status
+    const status = error.response?.status || '网络出现问题'
     switch (status) {
       case 401:
         message = 'TOKEN过期'
@@ -50,5 +50,6 @@ request.interceptors.response.use(
     return Promise.reject(error)
   },
 )
+window['axios'] = request
 //对外暴露
 export default request

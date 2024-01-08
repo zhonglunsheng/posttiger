@@ -5,10 +5,11 @@ export const sendApi = (data) => {
   let url = data.url.replace('http://', '').replace('https://', '')
   let index = url.indexOf('/')
   let headers = {}
+  console.log('代理请求', data)
   headers['x-dynamic-target'] = data.url.slice(0, data.url.indexOf('/', 8))
 
   const options = {
-    method: data.method,
+    method: 'POST',
     headers: headers,
     data: {
       requestBody: data.requestBody,

@@ -1,0 +1,36 @@
+#!/usr/bin/env node
+var path = require('path'),
+    argv = require('optimist').argv;
+
+var help = [
+    "usage: posttiger",
+    "",
+    "options:",
+    " -h --help Print this list and exit.",
+].join('\n');
+
+if (argv.h) {
+  return console.log(help);
+}
+
+try {
+    var root = argv._[0] || ".",
+        port = argv.p || 8080,
+        host = argv.a || 'localhost',
+        cache = argv.c || 3600
+        AutoIndex = argv.i || true;
+
+    console.log('Starting up posttiger ');
+
+    try {
+        require('../index')
+    } catch (err) {
+        return callback({
+            message: err.message
+        });
+    }
+    console.log('Hit CTRL-C to stop the server')
+}
+catch (err) {
+    console.error(err);
+}
