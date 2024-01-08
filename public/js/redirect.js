@@ -1,0 +1,1 @@
+import{u as s,R as o}from"./index.js";const _={__name:"redirect",setup(a){var t;let u=s(),e=o();console.log(e);let r=((t=e==null?void 0:e.query)==null?void 0:t.url)||"/script";return r&&u.push({path:r,query:{...e.query}}),(c,l)=>null}};export{_ as default};

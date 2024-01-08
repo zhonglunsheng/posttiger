@@ -21,11 +21,6 @@
   "scripts": {
     "start": "nodemon index.js"
   },
-  "files": [
-    "lib",
-    "bin",
-    "doc"
-  ],
   "engines": {
     "node": ">=v16.14.2"
   },
