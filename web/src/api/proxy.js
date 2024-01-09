@@ -18,7 +18,7 @@ export const sendApi = (data) => {
       url: data.url,
       queryParams: data.queryParams,
     },
-    url: 'http://localhost:3000/proxy',
+    url: window.posttiger.appUrl + '/proxy',
     params: data.queryParams,
   }
   return request(options)

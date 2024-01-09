@@ -77,14 +77,6 @@ const hotkeys = ref([
       bus.emit(constant.BUS.NEW_API_TAB, {})
     },
   },
-  {
-    id: '接口管理',
-    title: '接口管理',
-    hotkey: 'ctrl+u',
-    handler: () => {
-      bus.emit(constant.BUS.NEW_API_TAB, {})
-    },
-  },
 ])
 
 // Import component

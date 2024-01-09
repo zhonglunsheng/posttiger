@@ -5,7 +5,7 @@ const curlData = ref('')
 
 const curlParse = () => {
   window.axios
-    .post('http://localhost:3000/curlParse', {
+    .post(window.posttiger.appUrl + '/curlParse', {
       curl: curlData.value.replaceAll('\t', '  '),
     })
     .then((res) => {

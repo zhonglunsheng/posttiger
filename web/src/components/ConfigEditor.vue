@@ -157,7 +157,6 @@ const handlerLoading = () => {
       currentLanguageType.value = 'text'
       language.value = 'text'
     }
-    console.log(content.value)
     editorRefresh()
     window.localStorage.setItem(props.dataKey, configKey.value)
   }

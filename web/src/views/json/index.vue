@@ -171,7 +171,6 @@ const handlerLoading = () => {
       currentLanguageType.value = 'text'
       language.value = 'text'
     }
-    console.log(content.value)
     editorRefresh()
     window.localStorage.setItem('json-configKey', configKey.value)
   }

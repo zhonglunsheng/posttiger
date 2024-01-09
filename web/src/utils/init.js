@@ -139,7 +139,7 @@ const initPosttiger = () => {
   } else {
     window.posttiger.appUrl = 'http://localhost:3000'
     console.warn(
-      '%c 当前没有配置后端接口路径，使用默认请求地址：http://localhost:3000 %c',
+      '%c 当前没有配置后端接口路径，使用默认请求地址：http://localhost:3000 如需配置请添加localStorage [posttigerAppUrl: http://服务器IP:3000] %c',
       'background-color: #f56c6c; color: #fff;padding:3px;box-sizing: border-box;border-radius: 3px;',
       '',
     )

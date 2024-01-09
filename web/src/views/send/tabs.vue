@@ -15,7 +15,7 @@
     >
       <template #label>
         <span class="custom-tabs-label">
-          <el-icon v-if="notSaveApi(item.name)">
+          <el-icon v-if="item.state">
             <WarningFilled color="#F56C6C" />
           </el-icon>
           <el-icon v-else-if="item.content?.nodeType === 'api'">
@@ -31,19 +31,11 @@
 </template>
 
 <script setup>
-import {
-  computed,
-  ref,
-  reactive,
-  onMounted,
-  onBeforeUnmount,
-  watchEffect,
-} from 'vue'
+import {onMounted, ref, watchEffect,} from 'vue'
 import bus from 'vue3-eventbus'
-import { lib } from '@/utils/lib'
 import SendForm from '@/views/send/index.vue'
-import { uid } from 'uid'
-import { constant } from '@/utils/constant.js'
+import {uid} from 'uid'
+import {constant} from '@/utils/constant.js'
 
 let tabIndex = 2
 
@@ -103,6 +95,16 @@ const tabClick = (pane, ev) => {
     )
 }
 
+function updateTabSaveStatus() {
+  function currentSaveState(apiId) {
+    return !window.posttiger.db('apiList').collection.findOne({id: apiId})
+  }
+
+  for (let item of editableTabs.value) {
+    item.state = currentSaveState(item.name)
+  }
+}
+
 watchEffect(() => {
   const currentTabName = editableTabsValue.value
   console.log('当前激活tab名称', currentTabName)
@@ -112,6 +114,7 @@ watchEffect(() => {
     },
     null,
   )
+  updateTabSaveStatus();
 })
 
 const handleTabsEdit = (targetName, action) => {
@@ -179,6 +182,8 @@ onMounted(() => {
       console.log('监听到了')
       // 持久化editableTabs
       window.posttiger.db('apiTabs').cleanInsert(editableTabs.value)
+      // 更新当前tab保存状态
+      updateTabSaveStatus()
     }
   })
 

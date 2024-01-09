@@ -97,7 +97,7 @@ ${generateErrorExample(apiData.errorExample)}
         //     console.log(doc.project); // the project information
         // }
 
-        res.status(200).json({ success: '后台正在生成，请稍后访问链接 ' + `http://localhost:3000/apidoc/${folderName}  ` });
+        res.status(200).json({ success: '后台正在生成，请稍后访问链接 ' + `${window.posttiger.appUrl}/apidoc/${folderName}  ` });
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: 'Internal server error' });

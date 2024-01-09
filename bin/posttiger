@@ -25,6 +25,7 @@ try {
     try {
         require('../index')
     } catch (err) {
+        console.log('Starting up error ', err);
         return callback({
             message: err.message
         });

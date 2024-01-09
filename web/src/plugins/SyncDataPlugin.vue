@@ -1,6 +1,6 @@
 <script setup>
 const updateDbData = () => {
-  window.axios.get('http://localhost:3000/syncData').then((res) => {
+  window.axios.get(window.posttiger.appUrl + '/syncData').then((res) => {
     window.db.loadJSON(res.data)
     window.db.saveDatabase()
     window.services.ui.ElMessage.success('同步数据成功，刷新浏览器生效')
