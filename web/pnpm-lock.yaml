@@ -92,6 +92,9 @@ dependencies:
   vue3-loading-overlay:
     specifier: ^0.0.0
     version: 0.0.0(vue@3.3.8)
+  vue3-menus:
+    specifier: ^1.1.2
+    version: 1.1.2
   vue3-nestable:
     specifier: ^3.0.3
     version: 3.0.3(typescript@5.2.2)
@@ -6310,6 +6313,10 @@ packages:
       vue: ^3.0.0-beta.13
     dependencies:
       vue: 3.3.8(typescript@5.2.2)
+    dev: false
+
+  /vue3-menus@1.1.2:
+    resolution: {integrity: sha512-MoX87TH25fbKmmE8PwC+c2kJOSGJheP4pBR2we0RkOrfUDQg7sK+akAZSmQU8o+7dF+xVF2NfKPhoVHOhlX9wQ==}
     dev: false
 
   /vue3-nestable@3.0.3(typescript@5.2.2):

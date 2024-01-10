@@ -1,8 +1,21 @@
 <template>
   <div style="margin-bottom: 5px; display: flex; justify-content: flex-end">
-    <el-button icon="CirclePlus" @click="addOrUpdateDirectory">
-      添加项目
-    </el-button>
+    <el-tooltip
+        class="box-item"
+        effect="dark"
+        content="添加项目"
+        placement="top"
+    >
+      <a @click="addOrUpdateDirectory" style="cursor: pointer"><el-icon size="20"><CirclePlus /></el-icon></a>
+    </el-tooltip>
+    <el-tooltip
+        class="box-item"
+        effect="dark"
+        content="Github"
+        placement="top"
+    >
+      <a @click="goToGithub" style="cursor: pointer; margin-left: 5px"><el-icon size="20"><Promotion /></el-icon></a>
+    </el-tooltip>
   </div>
   <!-- <pre> {{ JSON.stringify(data, null, 2) }} </pre> -->
   <el-tree
@@ -157,21 +170,41 @@ const handleDrag = (draggingNod, dropNode, ev) => {
 import { uid } from 'uid'
 const append = (data, nodeType) => {
   let label = nodeType === 'api' ? '新增接口' : '新增目录'
-  const newChild = {
-    id: uid(),
-    label: label,
-    parentId: data.id,
-    children: [],
-    method: 'POST',
-    nodeType: nodeType,
+
+
+  function addData (label) {
+    const newChild = {
+      id: uid(),
+      label: label,
+      parentId: data.id,
+      children: [],
+      method: 'POST',
+      nodeType: nodeType,
+    }
+    if (!data.children) {
+      data.children = []
+    }
+    data.children.push(newChild)
+    updateApiList()
   }
-  if (!data.children) {
-    data.children = []
+
+  if (label === '新增目录') {
+    ElMessageBox.prompt('请输入目录名称', 'Tip', {
+      confirmButtonText: 'OK',
+      cancelButtonText: 'Cancel',
+    })
+        .then(({ value }) => {
+          addData(value)
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: 'Input canceled',
+          })
+        })
+  }else {
+    addData(label)
   }
-  console.log(newChild)
-  console.log(data)
-  data.children.push(newChild)
-  updateApiList()
 }
 
 const allowDrop = (draggingNode, dropNode, type) => {
@@ -227,9 +260,13 @@ const remove = (node, data) => {
     },
   })
 }
+
+const goToGithub = () => {
+  window.open('https://github.com/zhonglunsheng/posttiger', '_blank')
+}
 const addOrUpdateDirectory = (itemInfo) => {
   console.log(itemInfo, 'itemInfo')
-  ElMessageBox.prompt('请输入需要新增的目录名称', 'Tip', {
+  ElMessageBox.prompt('请输入目录名称', 'Tip', {
     confirmButtonText: 'OK',
     cancelButtonText: 'Cancel',
   })

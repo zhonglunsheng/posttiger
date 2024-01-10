@@ -16,7 +16,8 @@
     "lint:style": "stylelint src/**/*.{css,scss,vue} --cache --fix",
     "prepare": "husky install",
     "commitlint": "commitlint --config commitlint.config.cjs -e -V",
-    "preinstall": "node ./scripts/preinstall.js"
+    "preinstall": "node ./scripts/preinstall.js",
+    "release": "vite build && node ./scripts/release.js"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.1.0",
@@ -48,6 +49,7 @@
     "vue-vditor": "^0.0.7",
     "vue3-eventbus": "^2.0.0",
     "vue3-loading-overlay": "^0.0.0",
+    "vue3-menus": "^1.1.2",
     "vue3-nestable": "^3.0.3",
     "vue3-sfc-loader": "^0.8.4",
     "xml-formatter": "^3.6.0"

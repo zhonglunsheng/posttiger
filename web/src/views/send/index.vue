@@ -64,10 +64,6 @@
               <el-dropdown-item @click="closeApiTabList">
                 关闭所有标签
               </el-dropdown-item>
-              <el-dropdown-item>Action 2</el-dropdown-item>
-              <el-dropdown-item>Action 3</el-dropdown-item>
-              <el-dropdown-item>Action 4</el-dropdown-item>
-              <el-dropdown-item>Action 5</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -299,7 +295,7 @@ const send = () => {
       apiInfo.value.response =
         typeof error.response.data === 'object'
           ? JSON.stringify(error.response.data, null, 2)
-          : error.response.data
+          : error.response.data + ""
 
       apiInfo.value.requestHeader = JSON.stringify(
         error.config.headers,

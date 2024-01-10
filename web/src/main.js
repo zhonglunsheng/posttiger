@@ -107,7 +107,8 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 import 'vditor/dist/index.css'
 import VueVditor from 'vue-vditor'
 app.use(VueVditor)
-
+import Menus from 'vue3-menus';
+app.use(Menus);
 import Markdown from '@/components/Markdown.vue'
 app.component('Markdown', Markdown)
 app.mount('#app')
