@@ -2,7 +2,7 @@
   <div v-if="showDetail">
     <el-row style="margin-bottom: 10px">
       <el-col :span="12">
-        <el-input v-model="apiInfo.label" placeholder="Please input">
+        <el-input ref="apiNameRef" v-model="apiInfo.label" placeholder="Please input">
           <template #prepend>接口名称</template>
         </el-input>
       </el-col>
@@ -12,20 +12,20 @@
         <el-row>
           <el-col :span="3">
             <el-select
-              v-model="apiInfo.method"
-              placeholder="请求方式"
-              style="width: 100%"
+                v-model="apiInfo.method"
+                placeholder="请求方式"
+                style="width: 100%"
             >
-              <el-option label="GET" value="GET" />
-              <el-option label="POST" value="POST" />
-              <el-option label="PUT" value="PUT" />
-              <el-option label="DELETE" value="DELETE" />
+              <el-option label="GET" value="GET"/>
+              <el-option label="POST" value="POST"/>
+              <el-option label="PUT" value="PUT"/>
+              <el-option label="DELETE" value="DELETE"/>
             </el-select>
           </el-col>
           <el-col :span="21">
             <auto-complete
-              :data="apiInfo.url"
-              @change-data="
+                :data="apiInfo.url"
+                @change-data="
                 (data) => {
                   apiInfo.url = data
                 }
@@ -57,12 +57,17 @@
         <el-dropdown style="margin-left: 5px">
           <el-button type="primary">
             更多
-            <el-icon class="el-icon--right"><arrow-down /></el-icon>
+            <el-icon class="el-icon--right">
+              <arrow-down/>
+            </el-icon>
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item @click="closeApiTabList">
                 关闭所有标签
+              </el-dropdown-item>
+              <el-dropdown-item @click="addApiUseCases">
+                新增用例
               </el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -74,13 +79,13 @@
       <el-tab-pane label="请求头部" name="请求头部">
         <div style="height: 40vh; margin-top: 10px; margin-bottom: 5px">
           <Editor
-            @changeData="
+              :code="apiInfo.headers"
+              language="json"
+              @changeData="
               (value) => {
                 apiInfo.headers = value
               }
             "
-            language="json"
-            :code="apiInfo.headers"
           ></Editor>
         </div>
       </el-tab-pane>
@@ -88,26 +93,26 @@
         仅支持JSON格式请求体
         <div style="height: 40vh; margin-top: 10px; margin-bottom: 5px">
           <Editor
-            @changeData="
+              :code="apiInfo.requestBody"
+              language="json"
+              @changeData="
               (value) => {
                 apiInfo.requestBody = value
               }
             "
-            language="json"
-            :code="apiInfo.requestBody"
           ></Editor>
         </div>
       </el-tab-pane>
       <el-tab-pane label="Query参数" name="Query参数">
         <div style="height: 40vh; margin-top: 10px; margin-bottom: 5px">
           <Editor
-            @changeData="
+              :code="apiInfo.queryParams"
+              language="json"
+              @changeData="
               (value) => {
                 apiInfo.queryParams = value
               }
             "
-            language="json"
-            :code="apiInfo.queryParams"
           ></Editor>
         </div>
       </el-tab-pane>
@@ -119,9 +124,9 @@
       </el-tab-pane>
       <el-tab-pane label="插件开发" name="插件开发">
         <variable-plugin
-          v-if="activeName === '插件开发'"
-          dataKey="test-config"
-          :get-config-data-json="() => {}"
+            v-if="activeName === '插件开发'"
+            :get-config-data-json="() => {}"
+            dataKey="test-config"
         ></variable-plugin>
       </el-tab-pane>
     </el-tabs>
@@ -131,26 +136,26 @@
         <el-tabs v-model="activeResName" class="demo-tabs">
           <el-tab-pane :label="`响应内容`" name="响应内容">
             <div
-              style="height: 40vh; margin-top: 10px; margin-bottom: 5px"
-              v-loading="loading"
+                v-loading="loading"
+                style="height: 40vh; margin-top: 10px; margin-bottom: 5px"
             >
               <Editor
-                v-if="showEditor"
-                @changeData="
+                  v-if="showEditor"
+                  :code="apiInfo.response"
+                  language="json"
+                  @changeData="
                   (value) => {
                     apiInfo.response = value
                   }
                 "
-                language="json"
-                :code="apiInfo.response"
               ></Editor>
             </div>
           </el-tab-pane>
           <el-tab-pane label="响应json可视化" name="响应json可视化">
             <json-editor
-              class="json"
-              name="body"
-              v-model="jsonEditorContent"
+                v-model="jsonEditorContent"
+                class="json"
+                name="body"
             ></json-editor>
           </el-tab-pane>
           <el-tab-pane label="请求头" name="请求头">
@@ -163,11 +168,11 @@
               <el-text class="mx-1" type="primary">
                 接口耗时：{{ coastTime }}ms
               </el-text>
-              <br />
+              <br/>
               <el-text class="mx-1" type="primary">
                 返回大小：{{ contentSize }}
               </el-text>
-              <br />
+              <br/>
               <el-text class="mx-1" type="primary">
                 响应状态码：{{ contentResponseStatus }}
               </el-text>
@@ -190,26 +195,26 @@
 </template>
 
 <script setup>
-import {
-  computed,
-  ref,
-  reactive,
-  onMounted,
-  onBeforeUnmount,
-  watchEffect,
-} from 'vue'
+import {nextTick, onMounted, ref, watchEffect,} from 'vue'
 import Editor from '@/components/Editor.vue'
-import ConfigEditor from '@/views/json/index.vue'
 import Config from '@/views/config/index.vue'
-import { sendApi } from '@/api/proxy'
+import {sendApi} from '@/api/proxy'
 import AutoComplete from '@/components/AutoComplete.vue'
+import bus from 'vue3-eventbus'
 // import VariablePlugin from '@/plugins/CurlImportPlugins.vue'
-import VariablePlugin from '@/plugins/ApiDocPlugins.vue'
+import VariablePlugin from '@/plugins/SyncSwaggerPlugins.vue'
 // import VariablePlugin from '@/components/ConfigEditor.vue'
 import PluginEditor from '@/views/plugin/manage.vue'
+import {constant} from '@/utils/constant.js'
+import JsonEditor from '@/components/JsonEditor.vue'
+
 const props = defineProps({
   apiInfoProps: Object,
 })
+
+const apiNameRef = ref(null)
+
+
 const activeName = ref('请求体')
 const activeResName = ref('响应内容')
 
@@ -217,6 +222,12 @@ const coastTime = ref(0)
 const contentSize = ref('')
 const contentResponseStatus = ref(undefined)
 const apiInfo = ref(props.apiInfoProps || {})
+
+// 新增接口用例
+const addApiUseCases = () => {
+  bus.emit(constant.BUS.API_USE_CASE, () => {
+  })
+}
 
 const calculateTheResponseContentSize = (text) => {
   function formatBytes(bytes) {
@@ -242,19 +253,19 @@ const loading = ref(false)
 const send = () => {
   let apiInfoCopy = JSON.parse(JSON.stringify(apiInfo.value))
   apiInfoCopy.headers = apiInfoCopy.headers
-    ? JSON.parse(apiInfoCopy.headers)
-    : {}
+      ? JSON.parse(apiInfoCopy.headers)
+      : {}
   try {
     loading.value = true
     apiInfoCopy.requestBody = apiInfoCopy.requestBody
-      ? JSON.parse(apiInfoCopy.requestBody)
-      : {}
+        ? JSON.parse(apiInfoCopy.requestBody)
+        : {}
   } catch (e) {
     // ignore
   }
   apiInfoCopy.queryParams = apiInfoCopy.queryParams
-    ? JSON.parse(apiInfoCopy.queryParams)
-    : {}
+      ? JSON.parse(apiInfoCopy.queryParams)
+      : {}
   console.log(apiInfoCopy)
   // 接口发送前处理插件扩展函数
   window.posttiger.plugins.forEach((plugin) => {
@@ -263,52 +274,52 @@ const send = () => {
   apiRequestASnapshot.value = apiInfoCopy
   let start = new Date().getTime()
   sendApi(apiInfoCopy)
-    .then((res) => {
-      coastTime.value = new Date().getTime() - start
-      console.log(res)
-      console.log(res.headers)
-      apiInfo.value.response =
-        typeof res.data === 'object'
-          ? JSON.stringify(res.data, null, 2)
-          : res.data
-      // 计算大小
-      contentSize.value = calculateTheResponseContentSize(
-        apiInfo.value.response,
-      )
-      // 响应状态码
-      contentResponseStatus.value = res.status
-      apiInfo.value.requestHeader = JSON.stringify(res.config.headers, null, 2)
-      apiInfo.value.responseHeader = JSON.stringify(res.headers, null, 2)
-      refreshEditor()
-      loading.value = false
-    })
-    .catch((error) => {
-      loading.value = false
-      if (!error.response?.data) {
-        window.services.ui.ElMessage.error(
-          '接口异常，无数据返回，请查看控制台！！！',
+      .then((res) => {
+        coastTime.value = new Date().getTime() - start
+        console.log(res)
+        console.log(res.headers)
+        apiInfo.value.response =
+            typeof res.data === 'object'
+                ? JSON.stringify(res.data, null, 2)
+                : res.data
+        // 计算大小
+        contentSize.value = calculateTheResponseContentSize(
+            apiInfo.value.response,
         )
-        return
-      }
-      console.log(error)
-      contentResponseStatus.value = error.response.status
-      apiInfo.value.response =
-        typeof error.response.data === 'object'
-          ? JSON.stringify(error.response.data, null, 2)
-          : error.response.data + ""
+        // 响应状态码
+        contentResponseStatus.value = res.status
+        apiInfo.value.requestHeader = JSON.stringify(res.config.headers, null, 2)
+        apiInfo.value.responseHeader = JSON.stringify(res.headers, null, 2)
+        refreshEditor()
+        loading.value = false
+      })
+      .catch((error) => {
+        loading.value = false
+        if (!error.response?.data) {
+          window.services.ui.ElMessage.error(
+              '接口异常，无数据返回，请查看控制台！！！',
+          )
+          return
+        }
+        console.log(error)
+        contentResponseStatus.value = error.response.status
+        apiInfo.value.response =
+            typeof error.response.data === 'object'
+                ? JSON.stringify(error.response.data, null, 2)
+                : error.response.data + ""
 
-      apiInfo.value.requestHeader = JSON.stringify(
-        error.config.headers,
-        null,
-        2,
-      )
-      apiInfo.value.responseHeader = JSON.stringify(
-        error.response.headers,
-        null,
-        2,
-      )
-      refreshEditor()
-    })
+        apiInfo.value.requestHeader = JSON.stringify(
+            error.config.headers,
+            null,
+            2,
+        )
+        apiInfo.value.responseHeader = JSON.stringify(
+            error.response.headers,
+            null,
+            2,
+        )
+        refreshEditor()
+      })
 }
 
 const showEditor = ref('true')
@@ -319,10 +330,6 @@ const refreshEditor = () => {
   }, 100)
 }
 
-import bus from 'vue3-eventbus'
-import { lib } from '@/utils/lib'
-import { constant } from '@/utils/constant.js'
-import JsonEditor from '@/components/JsonEditor.vue'
 const recyclingAPI = () => {
   console.log(apiInfo.value)
   let copyApiInfo = apiInfo.value
@@ -342,15 +349,12 @@ const closeApiTabList = () => {
   bus.emit(constant.BUS.CLOSE_ALL_TAB_LIST, {})
 }
 const cloneApi = () => {
-  bus.emit(constant.BUS.CLONE_API, () => {})
+  bus.emit(constant.BUS.CLONE_API, () => {
+  })
 }
 onMounted(() => {
   bus.on('openApiDetail', (node) => {
     console.log('收到api打开广播')
-    // let apiInfoItem = lib.config.getApiInfoById(node.id)
-    // console.log(apiInfoItem)
-    // apiInfo.value = { ...apiInfoItem }
-    // reloadPage()
   })
 
   bus.on('test', (apiId) => {
@@ -359,6 +363,12 @@ onMounted(() => {
       savaApiInfo()
     }
   })
+  nextTick(() => {
+    console.log("进入")
+    apiNameRef.value.focus();
+    console.log('apiNameRef', apiNameRef)
+  })
+
 })
 
 const showDetail = ref(true)
@@ -372,8 +382,8 @@ const reloadPage = () => {
 const savaApiInfo = () => {
   console.log('savaApiInfo', apiInfo.value)
   window.posttiger
-    .db('apiList')
-    .insertOrUpdate({ id: apiInfo.value.id }, apiInfo.value)
+      .db('apiList')
+      .insertOrUpdate({id: apiInfo.value.id}, apiInfo.value)
   bus.emit('saveApi', apiInfo.value)
   window.services.ui.ElMessage.success('保存成功')
 }

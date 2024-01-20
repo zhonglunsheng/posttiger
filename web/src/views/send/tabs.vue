@@ -1,27 +1,32 @@
 <template>
   <el-tabs
-      v-model="editableTabsValue"
-      type="card"
-      editable
-      class="demo-tabs"
-      @tab-remove="tabRemove"
-      @edit="handleTabsEdit"
+    v-model="editableTabsValue"
+    type="card"
+    editable
+    class="demo-tabs"
+    @tab-remove="tabRemove"
+    @edit="handleTabsEdit"
   >
     <el-tab-pane
-        v-for="item in editableTabs"
-        :key="item.name"
-        :label="item.title"
-        :name="item.name"
+      v-for="item in editableTabs"
+      :key="item.name"
+      :label="item.title"
+      :name="item.name"
     >
       <template #label>
-        <span class="custom-tabs-label" v-menus:right="menus">
+        <span
+          class="custom-tabs-label"
+          @contextmenu="contextMenuFunc($event, item.name)"
+        >
           <el-icon v-if="item.state">
-            <WarningFilled color="#F56C6C"/>
+            <WarningFilled color="#F56C6C" />
           </el-icon>
           <el-icon v-else-if="item.content?.nodeType === 'api'">
-            <DocumentAdd/>
+            <DocumentAdd />
           </el-icon>
-
+          <el-icon v-else>
+            <StarFilled />
+          </el-icon>
           <span>&nbsp;{{ item.title }}</span>
         </span>
       </template>
@@ -31,34 +36,44 @@
 </template>
 
 <script setup>
-import {onMounted, ref, watchEffect,} from 'vue'
+import { onMounted, ref, watchEffect } from 'vue'
+import { menusEvent } from 'vue3-menus'
 import bus from 'vue3-eventbus'
 import SendForm from '@/views/send/index.vue'
-import {uid} from 'uid'
-import {constant} from '@/utils/constant.js'
+import { uid } from 'uid'
+import { constant } from '@/utils/constant.js'
 
 const menus = ref([
   {
-    label: "关闭所有标签",
+    label: '关闭所有标签',
     click: () => {
       closeAllTabs()
-    }
+    },
   },
   {
-    label: "关闭其他标签",
+    label: '关闭其他标签',
     click: () => {
       closeOthersTabs()
-    }
-  }
+    },
+  },
 ])
+
+const menusOptions = ref()
+const currentTabMenus = ref('')
+const contextMenuFunc = ($event, itemName) => {
+  currentTabMenus.value = itemName
+  menusEvent($event, {
+    menus: menus.value,
+  })
+}
 
 let tabIndex = 2
 
 const editableTabs = ref(window.posttiger.db('apiTabs').collection.find() || [])
 const editableTabsValue = ref(
-    window.posttiger
-        .db('apiTabConfig')
-        .collection.findOne({type: 'currentActiveTabName'})?.data || '2',
+  window.posttiger
+    .db('apiTabConfig')
+    .collection.findOne({ type: 'currentActiveTabName' })?.data || '2',
 )
 
 function addNewApiTab() {
@@ -84,36 +99,36 @@ const tabClick = (pane, ev) => {
 
   console.log(pane.paneName)
   let currentApiInfo =
-      editableTabs.value.filter((tab) => tab.name === pane.paneName)?.[0] ||
-      undefined
+    editableTabs.value.filter((tab) => tab.name === pane.paneName)?.[0] ||
+    undefined
   // let currentApiInfo = window.posttiger
   //   .db('apiList')
   //   .collection.findOne({ id: pane.paneName })
 
   if (!currentApiInfo) {
     currentApiInfo =
-        window.posttiger.db('apiTabs').collection.findOne({name: pane.paneName})
-            ?.content || {}
+      window.posttiger.db('apiTabs').collection.findOne({ name: pane.paneName })
+        ?.content || {}
   }
   console.log(currentApiInfo, 'currentApiInfo')
   window.posttiger
-      .db('apiTabConfig')
-      .insertOrUpdate(
-          {type: 'currentApiInfo'},
-          {type: 'currentApiInfo', data: currentApiInfo},
-      )
+    .db('apiTabConfig')
+    .insertOrUpdate(
+      { type: 'currentApiInfo' },
+      { type: 'currentApiInfo', data: currentApiInfo },
+    )
 
   window.posttiger
-      .db('apiTabConfig')
-      .insertOrUpdate(
-          {type: 'currentActiveTabName'},
-          {type: 'currentActiveTabName', data: editableTabsValue.value},
-      )
+    .db('apiTabConfig')
+    .insertOrUpdate(
+      { type: 'currentActiveTabName' },
+      { type: 'currentActiveTabName', data: editableTabsValue.value },
+    )
 }
 
 function updateTabSaveStatus() {
   function currentSaveState(apiId) {
-    return !window.posttiger.db('apiList').collection.findOne({id: apiId})
+    return !window.posttiger.db('apiList').collection.findOne({ id: apiId })
   }
 
   for (let item of editableTabs.value) {
@@ -125,12 +140,12 @@ watchEffect(() => {
   const currentTabName = editableTabsValue.value
   console.log('当前激活tab名称', currentTabName)
   tabClick(
-      {
-        paneName: currentTabName,
-      },
-      null,
+    {
+      paneName: currentTabName,
+    },
+    null,
   )
-  updateTabSaveStatus();
+  updateTabSaveStatus()
 })
 
 const handleTabsEdit = (targetName, action) => {
@@ -160,7 +175,7 @@ const tabRemove = (tab) => {
 }
 
 const notSaveApi = (apiId) => {
-  return !window.posttiger.db('apiList').collection.findOne({id: apiId})
+  return !window.posttiger.db('apiList').collection.findOne({ id: apiId })
 }
 
 const closeAllTabs = () => {
@@ -169,8 +184,8 @@ const closeAllTabs = () => {
     if (notSaveApi(tab.name)) {
       tab.content.parentId = constant.COMMON.RECYCLE_ID
       window.posttiger
-          .db(constant.COLLECTION.API_LIST)
-          .insertOrUpdate({id: tab.content.id}, tab.content)
+        .db(constant.COLLECTION.API_LIST)
+        .insertOrUpdate({ id: tab.content.id }, tab.content)
       bus.emit(constant.BUS.SAVE_API, tab.content)
     }
   })
@@ -184,22 +199,23 @@ const closeOthersTabs = () => {
     if (notSaveApi(tab.name)) {
       tab.content.parentId = constant.COMMON.RECYCLE_ID
       window.posttiger
-          .db(constant.COLLECTION.API_LIST)
-          .insertOrUpdate({id: tab.content.id}, tab.content)
+        .db(constant.COLLECTION.API_LIST)
+        .insertOrUpdate({ id: tab.content.id }, tab.content)
       bus.emit(constant.BUS.SAVE_API, tab.content)
     }
   })
   editableTabs.value = editableTabs.value.filter((tab) => {
-    return tab.name === editableTabsValue.value
+    return tab.name === currentTabMenus.value
   })
+  editableTabsValue.value = currentTabMenus.value
 }
 
 onMounted(() => {
   bus.on('openApiDetail', (node) => {
     console.log(node, 'openApiDetail')
     let apiInfoItem = window.posttiger
-        .db('apiList')
-        .collection.findOne({id: node.id})
+      .db('apiList')
+      .collection.findOne({ id: node.id })
 
     // 判断是否存在 如果存在则不添加
     let existInfo = editableTabs.value.filter((item) => {
@@ -218,13 +234,13 @@ onMounted(() => {
 
   bus.on('*', (type, e) => {
     if (
-        [
-          'openApiDetail',
-          'saveApi',
-          'tabRemove',
-          constant.BUS.NEW_API_TAB,
-          constant.BUS.CLONE_API,
-        ].includes(type)
+      [
+        'openApiDetail',
+        'saveApi',
+        'tabRemove',
+        constant.BUS.NEW_API_TAB,
+        constant.BUS.CLONE_API,
+      ].includes(type)
     ) {
       console.log('监听到了')
       // 持久化editableTabs
@@ -269,8 +285,8 @@ onMounted(() => {
   bus.on(constant.BUS.CLONE_API, () => {
     const id = uid()
     let currentApiInfo = window.posttiger
-        .db('apiTabConfig')
-        .collection.findOne({type: 'currentApiInfo'})
+      .db('apiTabConfig')
+      .collection.findOne({ type: 'currentApiInfo' })
 
     console.log(currentApiInfo)
     if (!currentApiInfo || !currentApiInfo.data) {
@@ -280,6 +296,36 @@ onMounted(() => {
     currentApiInfo = currentApiInfo.data.content
     let copyCurrentApiInfo = JSON.parse(JSON.stringify(currentApiInfo))
     copyCurrentApiInfo.id = id
+
+    editableTabs.value.push({
+      title: copyCurrentApiInfo.label,
+      name: id,
+      content: copyCurrentApiInfo,
+    })
+    editableTabsValue.value = id
+  })
+
+  bus.on(constant.BUS.API_USE_CASE, () => {
+    const id = uid()
+    let currentApiInfo = window.posttiger
+      .db('apiTabConfig')
+      .collection.findOne({ type: 'currentApiInfo' })
+
+    console.log(currentApiInfo)
+    if (!currentApiInfo || !currentApiInfo.data) {
+      return
+    }
+
+    currentApiInfo = currentApiInfo.data.content
+    let copyCurrentApiInfo = JSON.parse(JSON.stringify(currentApiInfo))
+    copyCurrentApiInfo.id = id
+    copyCurrentApiInfo.label = copyCurrentApiInfo.label + '-用例'
+    copyCurrentApiInfo.children = []
+    if (copyCurrentApiInfo.nodeType !== constant.NODE_TYPE.USER_CASE) {
+      // 当在用例界面增加用例时，默认父级为当前用例的父级
+      copyCurrentApiInfo.parentId = copyCurrentApiInfo.id
+    }
+    copyCurrentApiInfo.nodeType = constant.NODE_TYPE.USER_CASE
 
     editableTabs.value.push({
       title: copyCurrentApiInfo.label,
@@ -302,11 +348,11 @@ onMounted(() => {
     }
     // 当前激活tab为最后一个元素
     editableTabsValue.value =
-        editableTabs.value[editableTabs.value.length - 1]?.name
+      editableTabs.value[editableTabs.value.length - 1]?.name
   })
 
   bus.on(constant.BUS.CLOSE_ALL_TAB_LIST, () => {
-    closeAllTabs();
+    closeAllTabs()
   })
 })
 </script>

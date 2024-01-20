@@ -1,11 +1,3 @@
-const Swagger2Apipost = require('swagger2apipost');
-const converter = new Swagger2Apipost();
-const { data } = require('./api.js');
-
-
-// console.log(data)
-const swaggerJson= data
-
 
 function swagger2ApiJson(data) {
     let projectName = data.data?.project?.name || ''
@@ -45,9 +37,10 @@ function swagger2ApiJson(data) {
             }
 
             let apiInfo = {}
-            apiInfo['url'] = item.url
+            apiInfo['url'] = item.url.startsWith('http://') ? item.url : 'http://' + item.url
             apiInfo['method'] = item.method
-            apiInfo['label'] = item.name
+            console.log(item.name, item.description, item)
+            apiInfo['label'] = item.name === '新建接口' ? item.description || item.name : item.name
             apiInfo['queryParams'] = typeof(queryJson) === 'string' ? queryJson:  JSON.stringify(queryJson, null, 2)
             apiInfo['requestBody'] = requestBodyRow
             apiInfo['headers'] = JSON.stringify(headerJson, null, 2)
@@ -57,15 +50,18 @@ function swagger2ApiJson(data) {
     }
     return apis
 }
+//
+// const test = async () => {
+//     const convertResult= await converter.convert("http://localhost:9096/v2/api-docs");
+//     // console.log(convertResult);
+//     let apis = swagger2ApiJson(convertResult)
+//     console.log(apis)
+// }
+// test()
 
-const test = async () => {
-    const convertResult= await converter.convert("http://localhost:9096/v2/api-docs");
-    // console.log(convertResult);
-    let apis = swagger2ApiJson(convertResult)
-    console.log(apis)
+module.exports = {
+    swagger2ApiJson
 }
-test()
-
 
 // console.log(apis)
 

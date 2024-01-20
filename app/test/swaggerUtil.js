@@ -44,7 +44,7 @@ function generatePropertyValue(propertySchema) {
         throw new Error('Invalid or missing property schema');
     }
 
-    if (propertySchema.type === 'integer' && propertySchema.format === 'int64') {
+    if (propertySchema.type === 'integer') {
         return 0; // Replace with your logic for generating int64 values
     }
 
@@ -64,6 +64,14 @@ function generatePropertyValue(propertySchema) {
         return generateObject(propertySchema);
     }
 
+    if (propertySchema.type === 'file') {
+        return "file";
+    }
+
+    if (propertySchema.type === 'boolean') {
+        return true;
+    }
+
     if (propertySchema.type === 'array' && propertySchema.items) {
         if (propertySchema.items.type === 'array') {
             return generateArray(propertySchema.items);
@@ -74,7 +82,9 @@ function generatePropertyValue(propertySchema) {
         }
     }
 
-    throw new Error(`Unsupported property type: ${propertySchema.type}`);
+    return null;
+
+    // throw new Error(`Unsupported property type: ${propertySchema.type}`);
 }
 
 // Your given array schema
@@ -159,59 +169,45 @@ let arraySchema = {
 };
 
 
-function parseSchema(jsonSchema, type) {
-    if (type === 'query') {
-        jsonSchema = {
-            type: 'object',
-            properties: {
-                username: {
-                    "name": "username",
-                    "in": "query",
-                    "description": "The user name for login",
-                    "required": true,
-                    "type": "string"
-                },
-                password:{
-                    "name": "password",
-                    "in": "query",
-                    "description": "The password for login in clear text",
-                    "required": true,
-                    "type": "string"
-                }
-            }
-        }
+function parseSchema(jsonSchema) {
+    let result;
+    if (jsonSchema.type === 'array') {
+        result = generateArray(jsonSchema);
     }else {
-
+        result = generateObject(jsonSchema);
     }
+    return result
 }
 
-arraySchema = {
-    type: 'object',
-    properties: {
-        username: {
-            "name": "username",
-            "in": "query",
-            "description": "The user name for login",
-            "required": true,
-            "type": "string"
-        },
-        password:{
-    "name": "password",
-    "in": "query",
-    "description": "The password for login in clear text",
-    "required": true,
-    "type": "string"
-}
-    }
-}
+module.exports = { parseSchema };
 
-let generatedArray;
-if (arraySchema.type === 'array') {
-    generatedArray = generateArray(arraySchema);
-}else {
-    generatedArray = generateObject(arraySchema);
-}
-// Generate JSON array based on the schema
-
-
-console.log(JSON.stringify(generatedArray, null, 2));
+// arraySchema = {
+//     type: 'object',
+//     properties: {
+//         username: {
+//             "name": "username",
+//             "in": "query",
+//             "description": "The user name for login",
+//             "required": true,
+//             "type": "string"
+//         },
+//         password:{
+//     "name": "password",
+//     "in": "query",
+//     "description": "The password for login in clear text",
+//     "required": true,
+//     "type": "string"
+// }
+//     }
+// }
+//
+// let generatedArray;
+// if (arraySchema.type === 'array') {
+//     generatedArray = generateArray(arraySchema);
+// }else {
+//     generatedArray = generateObject(arraySchema);
+// }
+// // Generate JSON array based on the schema
+//
+//
+// console.log(JSON.stringify(generatedArray, null, 2));

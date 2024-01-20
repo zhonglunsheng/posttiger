@@ -175,7 +175,6 @@ app.get('/bigdata', (req, res) => {
   }
   res.status(200).json(resData)
 })
-
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });

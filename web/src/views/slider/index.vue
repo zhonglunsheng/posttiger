@@ -1,22 +1,61 @@
 <template>
-  <div style="margin-bottom: 5px; display: flex; justify-content: flex-end">
-    <el-tooltip
-        class="box-item"
-        effect="dark"
-        content="添加项目"
-        placement="top"
-    >
-      <a @click="addOrUpdateDirectory" style="cursor: pointer"><el-icon size="20"><CirclePlus /></el-icon></a>
-    </el-tooltip>
-    <el-tooltip
-        class="box-item"
-        effect="dark"
-        content="Github"
-        placement="top"
-    >
-      <a @click="goToGithub" style="cursor: pointer; margin-left: 5px"><el-icon size="20"><Promotion /></el-icon></a>
-    </el-tooltip>
-  </div>
+  <el-row>
+    <el-col :span="18">
+      <el-input
+        size="small"
+        placeholder="输入接口名称或url进行搜索"
+        clearable
+        v-model="queryApiInfo"
+        @input="queryApi"
+      ></el-input>
+    </el-col>
+    <el-col :span="6">
+      <div style="margin-bottom: 5px; display: flex; justify-content: flex-end">
+        <el-tooltip
+          class="box-item"
+          effect="dark"
+          content="批量操作"
+          placement="top"
+          v-if="checkNodeList.length > 0"
+        >
+          <a @click="OperationNode" style="cursor: pointer; margin-right: 5px">
+            <el-icon size="20"><Operation /></el-icon>
+          </a>
+        </el-tooltip>
+        <el-tooltip
+          class="box-item"
+          effect="dark"
+          content="编辑"
+          placement="top"
+        >
+          <a @click="editNode" style="cursor: pointer; margin-right: 5px">
+            <el-icon size="20"><Edit /></el-icon>
+          </a>
+        </el-tooltip>
+        <el-tooltip
+          class="box-item"
+          effect="dark"
+          content="添加项目"
+          placement="top"
+        >
+          <a @click="addOrUpdateDirectory" style="cursor: pointer">
+            <el-icon size="20"><CirclePlus /></el-icon>
+          </a>
+        </el-tooltip>
+        <el-tooltip
+          class="box-item"
+          effect="dark"
+          content="Github"
+          placement="top"
+        >
+          <a @click="goToGithub" style="cursor: pointer; margin-left: 5px">
+            <el-icon size="20"><Promotion /></el-icon>
+          </a>
+        </el-tooltip>
+      </div>
+    </el-col>
+  </el-row>
+
   <!-- <pre> {{ JSON.stringify(data, null, 2) }} </pre> -->
   <el-tree
     :allow-drag="
@@ -35,12 +74,17 @@
     @node-collapse="nodeCollapse"
     node-key="id"
     :default-expanded-keys="defaultExpandedKeys"
+    :show-checkbox="showCheckbox"
+    @check-change="multiCheck"
   >
     <template #default="{ node, data }">
       <span class="custom-tree-node">
         <span>
           <el-icon v-if="node.data.nodeType === 'api'">
             <Document />
+          </el-icon>
+          <el-icon v-else-if="node.data.nodeType === 'case'">
+            <StarFilled />
           </el-icon>
           <el-icon v-else>
             <Folder />
@@ -55,51 +99,6 @@
               ? node.label.substring(0, 40) + '...'
               : node.label
           }}
-
-          <!--          <el-dropdown-->
-          <!--            ref="dropdown1"-->
-          <!--            trigger="hover"-->
-          <!--            style="margin-right: 30px"-->
-          <!--          >-->
-          <!--            <span class="el-dropdown-link">-->
-          <!--              {{-->
-          <!--                node.label && node.label.length > 40-->
-          <!--                  ? node.label.substring(0, 40) + '...'-->
-          <!--                  : node.label-->
-          <!--              }}-->
-          <!--            </span>-->
-          <!--            <template #dropdown>-->
-          <!--              <el-dropdown-menu>-->
-          <!--                <el-dropdown-item-->
-          <!--                  icon="Collection"-->
-          <!--                  @click="addOrUpdateDirectory(node.data)"-->
-          <!--                  v-if="node.data.nodeType === 'directory'"-->
-          <!--                >-->
-          <!--                  编辑-->
-          <!--                </el-dropdown-item>-->
-          <!--                <el-dropdown-item-->
-          <!--                  icon="DocumentAdd"-->
-          <!--                  @click="append(data, 'api')"-->
-          <!--                  v-if="node.data.nodeType !== 'api'"-->
-          <!--                >-->
-          <!--                  新增接口-->
-          <!--                </el-dropdown-item>-->
-          <!--                <el-dropdown-item-->
-          <!--                  icon="Collection"-->
-          <!--                  @click="append(data, 'directory')"-->
-          <!--                  v-if="node.data.nodeType !== 'api'"-->
-          <!--                >-->
-          <!--                  新增目录-->
-          <!--                </el-dropdown-item>-->
-          <!--                <el-dropdown-item-->
-          <!--                  icon="DeleteFilled"-->
-          <!--                  @click="remove(node, data)"-->
-          <!--                >-->
-          <!--                  删除-->
-          <!--                </el-dropdown-item>-->
-          <!--              </el-dropdown-menu>-->
-          <!--            </template>-->
-          <!--          </el-dropdown>-->
         </span>
         <span>
           <el-dropdown>
@@ -119,14 +118,14 @@
                 <el-dropdown-item
                   icon="DocumentAdd"
                   @click="append(data, 'api')"
-                  v-if="node.data.nodeType !== 'api'"
+                  v-if="node.data.nodeType === 'directory'"
                 >
                   新增接口
                 </el-dropdown-item>
                 <el-dropdown-item
                   icon="Collection"
                   @click="append(data, 'directory')"
-                  v-if="node.data.nodeType !== 'api'"
+                  v-if="node.data.nodeType === 'directory'"
                 >
                   新增目录
                 </el-dropdown-item>
@@ -139,8 +138,6 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <!-- <a @click="append(data)">Append</a>
-          <a style="margin-left: 8px" @click="remove(node, data)">Delete</a> -->
         </span>
       </span>
     </template>
@@ -153,12 +150,100 @@ import { lib } from '@/utils/lib'
 import bus from 'vue3-eventbus'
 import { constant } from '@/utils/constant.js'
 
+const showCheckbox = ref(false)
+const checkNodeList = ref([])
+const multiCheck = (data, nodeCheckStatus) => {
+  if (!nodeCheckStatus) {
+    checkNodeList.value = checkNodeList.value.filter((item) => {
+      return item !== data.id
+    })
+  } else {
+    checkNodeList.value.push(data.id)
+  }
+  console.log(checkNodeList)
+}
+
+const OperationNode = () => {
+  ElMessageBox.confirm('是否批量删除接口，不删除目录？', 'Title', {
+    confirmButtonText: 'OK',
+    cancelButtonText: 'Cancel',
+  })
+    .then(() => {
+      checkNodeList.value.forEach((item) => {
+        let apiInfo = window.posttiger
+          .db(constant.COLLECTION.API_LIST)
+          .collection.findOne({ id: item })
+        if (apiInfo.nodeType === 'api') {
+          window.posttiger
+            .db(constant.COLLECTION.API_LIST)
+            .collection.remove(apiInfo)
+        }
+      })
+      checkNodeList.value = []
+      loadTreeDataFromDb()
+    })
+    .catch((e) => {
+      console.log(e)
+      ElMessage({
+        type: 'info',
+        message: 'Input canceled',
+      })
+    })
+}
+
+const editNode = () => {
+  showCheckbox.value = !showCheckbox.value
+}
+
+const queryApiInfo = ref('')
+
 let data = ref(
   lib.util.buildTree(
     window.posttiger.db(constant.COLLECTION.API_LIST).collection.find(),
     0,
   ),
 )
+
+const queryApi = (value) => {
+  if (!value) {
+    let filterData = window.posttiger
+      .db(constant.COLLECTION.API_LIST)
+      .collection.find()
+    data.value = lib.util.buildTree(filterData, 0)
+    return
+  }
+  let filterData = window.posttiger
+    .db(constant.COLLECTION.API_LIST)
+    .collection.find()
+    .filter((item) => {
+      return item.label.includes(value) || item.url?.includes(value)
+    })
+
+  // 搜索结果的父节点也要展示
+  let totalParentIds = filterData.map((item) => {
+    return item.id
+  })
+  function findTotalParentIds(totalParentIds, filterData) {
+    filterData.forEach((item) => {
+      if (item.parentId !== 0) {
+        totalParentIds.push(item.parentId)
+        let parentData = window.posttiger
+          .db(constant.COLLECTION.API_LIST)
+          .collection.find({ id: item.parentId })
+        findTotalParentIds(totalParentIds, parentData)
+      }
+    })
+  }
+
+  findTotalParentIds(totalParentIds, filterData)
+  filterData = window.posttiger
+    .db(constant.COLLECTION.API_LIST)
+    .collection.find()
+    .filter((item) => {
+      return totalParentIds.includes(item.id)
+    })
+  data.value = lib.util.buildTree(filterData, 0)
+}
 
 const handleDrag = (draggingNod, dropNode, ev) => {
   if (dropNode && draggingNod.data.id !== dropNode.data.id) {
@@ -171,8 +256,7 @@ import { uid } from 'uid'
 const append = (data, nodeType) => {
   let label = nodeType === 'api' ? '新增接口' : '新增目录'
 
-
-  function addData (label) {
+  function addData(label) {
     const newChild = {
       id: uid(),
       label: label,
@@ -193,16 +277,16 @@ const append = (data, nodeType) => {
       confirmButtonText: 'OK',
       cancelButtonText: 'Cancel',
     })
-        .then(({ value }) => {
-          addData(value)
+      .then(({ value }) => {
+        addData(value)
+      })
+      .catch(() => {
+        ElMessage({
+          type: 'info',
+          message: 'Input canceled',
         })
-        .catch(() => {
-          ElMessage({
-            type: 'info',
-            message: 'Input canceled',
-          })
-        })
-  }else {
+      })
+  } else {
     addData(label)
   }
 }
@@ -252,6 +336,20 @@ const remove = (node, data) => {
       console.log(action)
       if (action === 'confirm') {
         const parent = node.parent
+        // 递归删除子节点
+        function deleteChildren(children) {
+          children.forEach((item) => {
+            if (item.children && item.children.length > 0) {
+              deleteChildren(item.children)
+            }
+            window.posttiger
+              .db(constant.COLLECTION.API_LIST)
+              .removeByCondition({ id: item.id })
+          })
+        }
+
+        console.log(node.data)
+        deleteChildren(node.data.children || [])
         const children = parent.data.children || parent.data
         const index = children.findIndex((d) => d.id === data.id)
         children.splice(index, 1)

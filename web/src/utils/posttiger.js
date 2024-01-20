@@ -35,6 +35,13 @@ export const posttiger = {
       return insert(data)
     }
 
+    function removeByCondition(condition) {
+      let item = coll.findOne(condition)
+      if (item) {
+        coll.remove(item)
+      }
+    }
+
     /**
      * 更新或插入对象
      * @param data 对象数据
@@ -58,6 +65,7 @@ export const posttiger = {
     return {
       insert: insert,
       cleanInsert: cleanInsert,
+      removeByCondition: removeByCondition,
       insertOrUpdate: insertOrUpdate,
       collection: coll,
     }
