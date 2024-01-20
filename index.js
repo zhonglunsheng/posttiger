@@ -2,6 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const https = require('https');
 const { backupRouteHandler, cleanupExpiredBackups, syncDataRouterHandler } = require('./app/backup');
 const { curl2JsonRouteHandler } = require('./app/curl');
 const {uploadImageRouteHandler} = require("./app/upload");
@@ -30,6 +31,11 @@ app.post("/proxy", async (req, res) => {
   try {
     const { requestBody, headers, method, url, queryParams } = req.body;
     console.log(`proxy ${url}`)
+    // 在 axios 请求时，选择性忽略 SSL
+    const agent = new https.Agent({
+      rejectUnauthorized: false
+    });
+
     // 构建代理请求的配置
     const proxyConfig = {
       method: method || "GET",
@@ -37,7 +43,9 @@ app.post("/proxy", async (req, res) => {
       params: queryParams,
       data: requestBody,
       headers: headers,
+      httpsAgent: agent
     };
+
     // 发起代理请求
     const response = await axios(proxyConfig);
     for (let item in
