@@ -57,91 +57,93 @@
   </el-row>
 
   <!-- <pre> {{ JSON.stringify(data, null, 2) }} </pre> -->
-  <el-tree
-    :allow-drag="
-      () => {
-        return true
-      }
-    "
-    :allow-drop="allowDrop"
-    :data="data"
-    :default-expand-all="false"
-    draggable
-    :expand-on-click-node="true"
-    @node-drag-end="handleDrag"
-    @node-click="nodeClick"
-    @node-expand="nodeExpand"
-    @node-collapse="nodeCollapse"
-    node-key="id"
-    :default-expanded-keys="defaultExpandedKeys"
-    :show-checkbox="showCheckbox"
-    @check-change="multiCheck"
-  >
-    <template #default="{ node, data }">
-      <span class="custom-tree-node">
-        <span>
-          <el-icon v-if="node.data.nodeType === 'api'">
-            <Document />
-          </el-icon>
-          <el-icon v-else-if="node.data.nodeType === 'case'">
-            <StarFilled />
-          </el-icon>
-          <el-icon v-else>
-            <Folder />
-          </el-icon>
+  <div style="height: 80vh; overflow-y: auto" class="el-scrollbar sidebar">
+    <el-tree
+      :allow-drag="
+        () => {
+          return true
+        }
+      "
+      :allow-drop="allowDrop"
+      :data="data"
+      :default-expand-all="false"
+      draggable
+      :expand-on-click-node="true"
+      @node-drag-end="handleDrag"
+      @node-click="nodeClick"
+      @node-expand="nodeExpand"
+      @node-collapse="nodeCollapse"
+      node-key="id"
+      :default-expanded-keys="defaultExpandedKeys"
+      :show-checkbox="showCheckbox"
+      @check-change="multiCheck"
+    >
+      <template #default="{ node, data }">
+        <span class="custom-tree-node">
+          <span>
+            <el-icon v-if="node.data.nodeType === 'api'">
+              <Document />
+            </el-icon>
+            <el-icon v-else-if="node.data.nodeType === 'case'">
+              <StarFilled />
+            </el-icon>
+            <el-icon v-else>
+              <Folder />
+            </el-icon>
 
-          <el-text truncated>
-            <!--            如果字符过长则省略-->
-          </el-text>
+            <el-text truncated>
+              <!--            如果字符过长则省略-->
+            </el-text>
 
-          {{
-            node.label && node.label.length > 40
-              ? node.label.substring(0, 40) + '...'
-              : node.label
-          }}
+            {{
+              node.label && node.label.length > 40
+                ? node.label.substring(0, 40) + '...'
+                : node.label
+            }}
+          </span>
+          <span>
+            <el-dropdown>
+              <span class="el-dropdown-link">
+                ...
+                <el-icon class="el-icon--right"><arrow-down /></el-icon>
+              </span>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item
+                    icon="Collection"
+                    @click="addOrUpdateDirectory(node.data)"
+                    v-if="node.data.nodeType === 'directory'"
+                  >
+                    编辑
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    icon="DocumentAdd"
+                    @click="append(data, 'api')"
+                    v-if="node.data.nodeType === 'directory'"
+                  >
+                    新增接口
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    icon="Collection"
+                    @click="append(data, 'directory')"
+                    v-if="node.data.nodeType === 'directory'"
+                  >
+                    新增目录
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    icon="DeleteFilled"
+                    @click="remove(node, data)"
+                  >
+                    删除
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </span>
         </span>
-        <span>
-          <el-dropdown>
-            <span class="el-dropdown-link">
-              ...
-              <el-icon class="el-icon--right"><arrow-down /></el-icon>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item
-                  icon="Collection"
-                  @click="addOrUpdateDirectory(node.data)"
-                  v-if="node.data.nodeType === 'directory'"
-                >
-                  编辑
-                </el-dropdown-item>
-                <el-dropdown-item
-                  icon="DocumentAdd"
-                  @click="append(data, 'api')"
-                  v-if="node.data.nodeType === 'directory'"
-                >
-                  新增接口
-                </el-dropdown-item>
-                <el-dropdown-item
-                  icon="Collection"
-                  @click="append(data, 'directory')"
-                  v-if="node.data.nodeType === 'directory'"
-                >
-                  新增目录
-                </el-dropdown-item>
-                <el-dropdown-item
-                  icon="DeleteFilled"
-                  @click="remove(node, data)"
-                >
-                  删除
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </span>
-      </span>
-    </template>
-  </el-tree>
+      </template>
+    </el-tree>
+  </div>
 </template>
 
 <script setup>
@@ -314,6 +316,24 @@ onMounted(() => {
   bus.on(constant.BUS.SAVE_API, () => {
     loadTreeDataFromDb()
   })
+
+  bus.on(constant.BUS.REFRESH_API_TREE_NODE, () => {
+    loadTreeDataFromDb()
+  })
+
+  bus.on(constant.BUS.REMOVE_ALL_API_BY_NODE_ID, (nodeId) => {
+    // 获取节点ID信息
+    let data =
+      window.posttiger
+        .db(constant.COLLECTION.API_LIST)
+        .collection.findOne({ id: nodeId }) || {}
+    console.log('REMOVE_ALL_API_BY_NODE_ID', nodeId, data)
+    deleteChildren(data?.children || [])
+    // 删除当前节点
+    window.posttiger
+      .db(constant.COLLECTION.API_LIST)
+      .removeByCondition({ id: nodeId })
+  })
 })
 
 const updateApiList = () => {
@@ -329,6 +349,22 @@ const updateApiList = () => {
 
 // 增加添加项目弹框
 import { ElMessage, ElMessageBox } from 'element-plus'
+
+/**
+ * 递归删除子节点
+ * @param children
+ */
+function deleteChildren(children) {
+  children.forEach((item) => {
+    if (item.children && item.children.length > 0) {
+      deleteChildren(item.children)
+    }
+    window.posttiger
+      .db(constant.COLLECTION.API_LIST)
+      .removeByCondition({ id: item.id })
+  })
+}
+
 const remove = (node, data) => {
   ElMessageBox.alert('是否删除？', 'Title', {
     confirmButtonText: 'OK',
@@ -337,17 +373,6 @@ const remove = (node, data) => {
       if (action === 'confirm') {
         const parent = node.parent
         // 递归删除子节点
-        function deleteChildren(children) {
-          children.forEach((item) => {
-            if (item.children && item.children.length > 0) {
-              deleteChildren(item.children)
-            }
-            window.posttiger
-              .db(constant.COLLECTION.API_LIST)
-              .removeByCondition({ id: item.id })
-          })
-        }
-
         console.log(node.data)
         deleteChildren(node.data.children || [])
         const children = parent.data.children || parent.data

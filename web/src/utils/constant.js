@@ -12,11 +12,14 @@ export const constant = {
     ADD_TO_THE_RECYCLE_BIN: 'ADD_TO_THE_RECYCLE_BIN',
     CLOSE_ALL_TAB_LIST: 'CLOSE_ALL_TAB_LIST',
     LOADING_VARIABLES: 'LOADING_VARIABLES',
+    // 刷新树结构
+    REFRESH_API_TREE_NODE: 'REFRESH_API_TREE_NODE',
+    REMOVE_ALL_API_BY_NODE_ID: 'REMOVE_ALL_API_BY_NODE_ID',
   },
   NODE_TYPE: {
-    API: "api",
-    DIR: "directory",
-    USER_CASE: "case"
+    API: 'api',
+    DIR: 'directory',
+    USER_CASE: 'case',
   },
   COLLECTION: {
     // 用于保存当前打开的标签页接口相关信息，关闭后浏览器后还能复原

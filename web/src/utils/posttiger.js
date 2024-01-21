@@ -38,6 +38,7 @@ export const posttiger = {
     function removeByCondition(condition) {
       let item = coll.findOne(condition)
       if (item) {
+        console.log('删除', item)
         coll.remove(item)
       }
     }
