@@ -1,6 +1,6 @@
 <template>
   <el-row>
-    <el-col :span="18">
+    <el-col :span="12">
       <el-input
         size="small"
         placeholder="输入接口名称或url进行搜索"
@@ -9,7 +9,7 @@
         @input="queryApi"
       ></el-input>
     </el-col>
-    <el-col :span="6">
+    <el-col :span="12">
       <div style="margin-bottom: 5px; display: flex; justify-content: flex-end">
         <el-tooltip
           class="box-item"

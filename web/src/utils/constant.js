@@ -15,6 +15,8 @@ export const constant = {
     // 刷新树结构
     REFRESH_API_TREE_NODE: 'REFRESH_API_TREE_NODE',
     REMOVE_ALL_API_BY_NODE_ID: 'REMOVE_ALL_API_BY_NODE_ID',
+    // 显示或隐藏侧边栏
+    CHANGE_SLIDER_STATUS: 'CHANGE_SLIDER_STATUS',
   },
   NODE_TYPE: {
     API: 'api',

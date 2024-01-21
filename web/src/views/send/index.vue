@@ -73,6 +73,9 @@
               <el-dropdown-item @click="addApiUseCases">
                 新增用例
               </el-dropdown-item>
+              <el-dropdown-item @click="changeSliderShow">
+                隐藏/显示侧边栏
+              </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -155,7 +158,7 @@
               ></Editor>
             </div>
           </el-tab-pane>
-          <el-tab-pane label="响应json可视化" name="响应json可视化">
+          <el-tab-pane label="响应可视化" name="响应可视化">
             <json-editor
               v-model="jsonEditorContent"
               class="json"
@@ -218,7 +221,7 @@ import { sendApi } from '@/api/proxy'
 import AutoComplete from '@/components/AutoComplete.vue'
 import bus from 'vue3-eventbus'
 // import VariablePlugin from '@/plugins/CurlImportPlugins.vue'
-import VariablePlugin from '@/plugins/SyncSwaggerPlugins.vue'
+import VariablePlugin from '@/plugins/DbConfigPlugins.vue'
 // import VariablePlugin from '@/components/ConfigEditor.vue'
 import PluginEditor from '@/views/plugin/manage.vue'
 import { constant } from '@/utils/constant.js'
@@ -241,6 +244,10 @@ const apiInfo = ref(props.apiInfoProps || {})
 // 新增接口用例
 const addApiUseCases = () => {
   bus.emit(constant.BUS.API_USE_CASE, () => {})
+}
+
+const changeSliderShow = () => {
+  bus.emit(constant.BUS.CHANGE_SLIDER_STATUS, () => {})
 }
 
 const calculateTheResponseContentSize = (text) => {

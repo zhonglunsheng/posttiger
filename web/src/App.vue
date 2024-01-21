@@ -79,6 +79,9 @@ const hotkeys = ref([
   },
 ])
 
+// 改变布局
+const apiColSize = ref(18)
+
 // Import component
 import Loading from 'vue3-loading-overlay'
 // Import stylesheet
@@ -114,6 +117,15 @@ onMounted(() => {
     }
     console.log('themePlugin:changeTheme')
     document.documentElement.style.setProperty(data[0], data[1])
+  })
+
+  bus.on(constant.BUS.CHANGE_SLIDER_STATUS, () => {
+    if (apiColSize.value === 24) {
+      // 当前为隐藏侧边栏状态
+      apiColSize.value = 18
+    } else {
+      apiColSize.value = 24
+    }
   })
 })
 
@@ -338,12 +350,12 @@ const loadingPlugin = (id) => {
     <!--      </el-col>-->
     <!--    </el-row>-->
     <el-row :gutter="20">
-      <el-col :span="6">
+      <el-col :span="24 - apiColSize">
         <el-card>
           <Slider></Slider>
         </el-card>
       </el-col>
-      <el-col :span="18">
+      <el-col :span="apiColSize">
         <el-card>
           <!-- <send-form></send-form> -->
           <send-form-tabs></send-form-tabs>
