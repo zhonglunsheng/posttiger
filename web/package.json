@@ -29,6 +29,7 @@
     "element-plus": "^2.4.2",
     "enum": "^3.0.4",
     "eruda": "^3.0.1",
+    "hotkeys-js": "^3.13.5",
     "js-yaml": "^4.1.0",
     "json-schema-faker": "^0.5.4",
     "jsoneditor": "^10.0.0",

@@ -73,6 +73,9 @@
               <el-dropdown-item @click="addApiUseCases">
                 新增用例
               </el-dropdown-item>
+              <el-dropdown-item @click="removeCurrentApi">
+                删除
+              </el-dropdown-item>
               <el-dropdown-item @click="changeSliderShow">
                 隐藏/显示侧边栏
               </el-dropdown-item>
@@ -126,9 +129,6 @@
       <el-tab-pane label="插件扩展" name="插件扩展">
         <plugin-editor v-if="activeName === '插件扩展'"></plugin-editor>
       </el-tab-pane>
-      <el-tab-pane label="配置管理" name="配置管理">
-        <config v-if="activeName === '配置管理'"></config>
-      </el-tab-pane>
       <el-tab-pane label="插件开发" name="插件开发">
         <variable-plugin
           v-if="activeName === '插件开发'"
@@ -144,7 +144,8 @@
           <el-tab-pane :label="`响应内容`" name="响应内容">
             <div
               v-loading="loading"
-              style="height: 40vh; margin-top: 10px; margin-bottom: 5px"
+              style="margin-top: 10px; margin-bottom: 5px"
+              class="response-content"
             >
               <Editor
                 v-if="showEditor"
@@ -159,11 +160,13 @@
             </div>
           </el-tab-pane>
           <el-tab-pane label="响应可视化" name="响应可视化">
-            <json-editor
-              v-model="jsonEditorContent"
-              class="json"
-              name="body"
-            ></json-editor>
+            <div>
+              <json-editor
+                v-model="jsonEditorContent"
+                name="body"
+                style="height: 80vh"
+              ></json-editor>
+            </div>
           </el-tab-pane>
           <!--          <el-tab-pane label="html内容预览" name="html内容预览">-->
           <!--            <div style="height: 40vh">-->
@@ -221,7 +224,7 @@ import { sendApi } from '@/api/proxy'
 import AutoComplete from '@/components/AutoComplete.vue'
 import bus from 'vue3-eventbus'
 // import VariablePlugin from '@/plugins/CurlImportPlugins.vue'
-import VariablePlugin from '@/plugins/DbConfigPlugins.vue'
+import VariablePlugin from '@/plugins/NodeConfig.vue'
 // import VariablePlugin from '@/components/ConfigEditor.vue'
 import PluginEditor from '@/views/plugin/manage.vue'
 import { constant } from '@/utils/constant.js'
@@ -289,7 +292,7 @@ const send = () => {
     : {}
   console.log(apiInfoCopy)
   // 接口发送前处理插件扩展函数
-  window.posttiger.plugins.forEach((plugin) => {
+  window.posttiger.plugins.data.forEach((plugin) => {
     plugin.beforePost(apiInfoCopy)
   })
   apiRequestASnapshot.value = apiInfoCopy
@@ -373,21 +376,28 @@ const cloneApi = () => {
   bus.emit(constant.BUS.CLONE_API, () => {})
 }
 onMounted(() => {
-  bus.on('openApiDetail', (node) => {
-    console.log('收到api打开广播')
-  })
-
   bus.on('test', (apiId) => {
     console.log('recive keymap-save-current-api-tabs-action event', apiId)
     if (apiInfo.value.id === apiId) {
       savaApiInfo()
     }
   })
-  nextTick(() => {
-    console.log('进入')
-    apiNameRef.value.focus()
-    console.log('apiNameRef', apiNameRef)
+  bus.on(constant.BUS.KEYDOWN_ACTION, (data) => {
+    console.log(constant.KEYDOWN.SEND_API.NAME, data)
+    if (constant.KEYDOWN.SEND_API.NAME === data.type) {
+      // 判断当前激活面板
+      let activeApi = window.posttiger.node.getCurrentActiveApi()
+      if (apiInfo.value.id === activeApi.id) {
+        console.log('发送API请求')
+        send()
+      }
+    }
   })
+  // nextTick(() => {
+  //   console.log('进入')
+  //   apiNameRef.value.focus()
+  //   console.log('apiNameRef', apiNameRef)
+  // })
 })
 
 const showDetail = ref(true)
@@ -407,6 +417,10 @@ const savaApiInfo = () => {
   window.services.ui.ElMessage.success('保存成功')
 }
 
+const removeCurrentApi = () => {
+  bus.emit(constant.BUS.REMOVE_API_ACTION, { id: apiInfo.value.id })
+}
+
 const jsonEditorContent = ref({})
 
 watchEffect(() => {
@@ -421,9 +435,14 @@ watchEffect(() => {
     jsonEditorContent.value = JSON.stringify(data)
   }
 })
+
+const responseViewHeight = ref('80vh')
 </script>
 <style scoped>
 .pre-code {
   white-space: pre-wrap !important;
+}
+.response-content {
+  height: v-bind(responseViewHeight);
 }
 </style>

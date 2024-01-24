@@ -10,7 +10,7 @@ import bus from 'vue3-eventbus'
 import * as monaco from 'monaco-editor'
 import { uid } from 'uid'
 import { pluginsData } from '@/utils/initData/plugins.js'
-import themeAtlanticNight from '@/themes/EvaLight.json'
+import EvaLight from '@/themes/EvaLight.json'
 import AtlanticNight from '@/themes/AtlanticNight.json'
 import AtomOneDark from '@/themes/AtomOneDark.json'
 import AuroraX from '@/themes/AuroraX.json'
@@ -21,7 +21,6 @@ import BracketsLightPro from '@/themes/BracketsLightPro.json'
 import CodeSandBox from '@/themes/CodeSandBox.json'
 import Darktooth from '@/themes/Darktooth.json'
 import Dracula from '@/themes/Dracula.json'
-import EvaLight from '@/themes/EvaLight.json'
 import FlatUI from '@/themes/FlatUI.json'
 import Hopscotch from '@/themes/Hopscotch.json'
 import HorlaLightTheme from '@/themes/HorlaLightTheme.json'
@@ -29,6 +28,7 @@ import HybridNext from '@/themes/HybridNext.json'
 import KimbieDark from '@/themes/KimbieDark.json'
 import LaserWave from '@/themes/LaserWave.json'
 import Lucario from '@/themes/Lucario.json'
+import themeLucario from '@/themes/Lucario.json'
 import Min from '@/themes/Min.json'
 import MonokaiDimmed from '@/themes/MonokaiDimmed.json'
 import MonokaiPro from '@/themes/MonokaiPro.json'
@@ -50,7 +50,6 @@ import TokyoNightStorm from '@/themes/TokyoNightStorm.json'
 import TomorrowNightBlue from '@/themes/TomorrowNightBlue.json'
 import Twilight from '@/themes/Twilight.json'
 import WinterIsComing from '@/themes/WinterIsComing.json'
-import themeLucario from '@/themes/Lucario.json'
 
 const initService = () => {
   if (window.services) {
@@ -108,6 +107,7 @@ const initDb = () => {
     console.log('databaseInitialize')
     // 在这里可以执行初始化操作
     initTreeParent()
+    initPosttiger()
     // 是否有内置插件，没有则初始化
     let pluginInner = window.posttiger.db('apiPlugins').collection.find()
     if (pluginInner.length === 0) {
@@ -125,9 +125,138 @@ const initDb = () => {
   window.db = db
 }
 
+const initPosttigerPlugins = () => {
+  return {
+    data: [],
+    register: (plugin) => {
+      let plugins = window.posttiger.plugins.data
+      // 判断当前plugins是否存在插件名称 存在则删除 重新注册
+      let existPluginInfo = plugins.filter((p) => {
+        return p.name === plugin.name
+      })
+      if (existPluginInfo.length > 0) {
+        // 移除
+        window.posttiger.plugins.data = window.posttiger.plugins.data.filter(
+          (p) => {
+            return p.name !== plugin.name
+          },
+        )
+      }
+      // 加入 判断是否启用
+      if (plugin.enable) {
+        console.log('注册插件', plugin)
+        window.posttiger.plugins.data.push(plugin)
+        // 排序
+        window.posttiger.plugins.data.sort((a, b) => {
+          // order越大优先级越大，没有设置默认最小
+          let aOrder = a?.order || 1
+          let bOrder = b?.order || 1
+          return aOrder - bOrder
+        })
+      }
+    },
+  }
+}
+
+const initPosttigerNode = () => {
+  return {
+    ...posttiger.db(constant.COLLECTION.API_LIST),
+    /**
+     * 递归删除当前节点以及子节点
+     * @param nodeId
+     */
+    deleteAllNodeById: (nodeId) => {
+      function deleteNode(children) {
+        if (children && children.length) {
+          for (let item of children) {
+            posttiger
+              .db(constant.COLLECTION.API_LIST)
+              .removeByCondition({ id: item.id })
+            deleteNode(item.children)
+          }
+        }
+      }
+      let nodeInfo = posttiger
+        .db(constant.COLLECTION.API_LIST)
+        .collection.findOne({ id: nodeId })
+      posttiger
+        .db(constant.COLLECTION.API_LIST)
+        .removeByCondition({ id: nodeId })
+      return deleteNode(nodeInfo?.children || [])
+    },
+    /**
+     * 获取当前节点所有父节点ID集合，如果没有则返回为空
+     * @param nodeId
+     */
+    findAllParentNodeById: (nodeId) => {
+      let nodeList = []
+      function findNode(nodeId, nodeList) {
+        let nodeInfo = posttiger
+          .db(constant.COLLECTION.API_LIST)
+          .collection.findOne({ id: nodeId })
+        if (nodeInfo) {
+          nodeList.push(nodeInfo.id)
+          findNode(nodeInfo.parentId, nodeList)
+        }
+      }
+      let nodeInfo = posttiger
+        .db(constant.COLLECTION.API_LIST)
+        .collection.findOne({ id: nodeId })
+      findNode(nodeInfo.parentId, nodeList)
+      return nodeList
+    },
+    findAllChildrenNodeById: (nodeId) => {
+      let res = []
+      function findChildrenNode(children, res) {
+        debugger
+        for (let nodeInfo of children) {
+          if (nodeInfo) {
+            let children = nodeInfo.children || []
+            delete nodeInfo.children
+            res.push(nodeInfo)
+            findChildrenNode(children, res)
+          }
+        }
+      }
+      let nodeInfo = posttiger
+        .db(constant.COLLECTION.API_LIST)
+        .collection.findOne({ id: nodeId })
+      findChildrenNode(nodeInfo?.children || [], res)
+      return res
+    },
+    getTreeNode: () => {
+      let apiInfoList = posttiger
+        .db(constant.COLLECTION.API_LIST)
+        .collection.find()
+      return lib.util.buildTree(JSON.parse(JSON.stringify(apiInfoList)), 0)
+    },
+    /**
+     * 获取当前激活的api信息，返回api数据结构
+     * @returns {*|{}}
+     */
+    getCurrentActiveApi: () => {
+      return (
+        posttiger
+          .db(constant.COLLECTION.API_TAB_CONFIG)
+          .collection.findOne({ type: 'currentApiInfo' })?.data?.content || {}
+      )
+    },
+  }
+}
+
 const initPosttiger = () => {
+  /**
+   * node节点操作API
+   */
+  function node() {}
+
   // 挂载封装好的函数
-  window.posttiger = posttiger
+  window.posttiger = {
+    // api节点操作
+    node: initPosttigerNode(),
+    ...posttiger,
+    plugins: initPosttigerPlugins(),
+  }
   let posttigerAppUrl = window.localStorage.getItem('posttigerAppUrl')
   if (posttigerAppUrl) {
     window.posttiger.appUrl = posttigerAppUrl

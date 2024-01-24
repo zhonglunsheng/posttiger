@@ -1,10 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { constant } from '@/utils/constant.js'
 
 const collections = ref(window.db.collections.map((item) => item.name) || [])
 
-const selectDbName = ref(null)
+const selectDbName = ref(window.localStorage.getItem('selectDbName') || null)
 
 // 读取API
 const editorContent = ref(
@@ -17,6 +16,7 @@ const editorContent = ref(
 
 const showEditor = ref(false)
 const changeSelectDbName = (value) => {
+  window.localStorage.setItem('selectDbName', selectDbName.value)
   editorContent.value = JSON.stringify(
     window.posttiger.db(value).collection.find() || {},
     null,
@@ -26,6 +26,10 @@ const changeSelectDbName = (value) => {
   setTimeout(() => {
     showEditor.value = true
   }, 100)
+}
+
+if (selectDbName.value) {
+  changeSelectDbName(selectDbName.value)
 }
 
 const saveVariable = () => {

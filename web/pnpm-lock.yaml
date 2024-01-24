@@ -32,6 +32,9 @@ dependencies:
   eruda:
     specifier: ^3.0.1
     version: 3.0.1
+  hotkeys-js:
+    specifier: ^3.13.5
+    version: 3.13.5
   js-yaml:
     specifier: ^4.1.0
     version: 4.1.0
@@ -3358,6 +3361,10 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       lru-cache: 6.0.0
+
+  /hotkeys-js@3.13.5:
+    resolution: {integrity: sha512-xqPBCCC9QtLUpNZhlncfPhY/KMMiiA5+YsLDCTbwDfVBvCM+IQJPZwqB8iURZI9GQYcsmqpSlARZ238puVEs3Q==}
+    dev: false
 
   /hotkeys-js@3.8.7:
     resolution: {integrity: sha512-ckAx3EkUr5XjDwjEHDorHxRO2Kb7z6Z2Sxul4MbBkN8Nho7XDslQsgMJT+CiJ5Z4TgRxxvKHEpuLE3imzqy4Lg==}

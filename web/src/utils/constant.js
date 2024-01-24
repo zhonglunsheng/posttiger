@@ -17,6 +17,13 @@ export const constant = {
     REMOVE_ALL_API_BY_NODE_ID: 'REMOVE_ALL_API_BY_NODE_ID',
     // 显示或隐藏侧边栏
     CHANGE_SLIDER_STATUS: 'CHANGE_SLIDER_STATUS',
+    OPEN_API_DETAIL: 'openApiDetail',
+    // api删除后触发事件
+    REMOVE_API_EVENT: 'REMOVE_API_EVENT',
+    // 执行api删除操作
+    REMOVE_API_ACTION: 'REMOVE_API_ACTION',
+    // 键盘监听广播事件
+    KEYDOWN_ACTION: 'KEYDOWN_ACTION',
   },
   NODE_TYPE: {
     API: 'api',
@@ -28,8 +35,24 @@ export const constant = {
     API_TABS: 'apiTabs',
     API_LIST: 'apiList',
     API_PLUGINS: 'apiPlugins',
+    API_TAB_CONFIG: 'apiTabConfig',
   },
   COMMON: {
     RECYCLE_ID: 999999,
   },
+  KEYDOWN: createEnum({
+    SEND_API: 'ctrl+enter',
+  }),
+}
+
+function createEnum(definition) {
+  const strToValueMap = {}
+  const numToDescMap = {}
+  let enumObj = {}
+  for (const enumName of Object.keys(definition)) {
+    enumObj[enumName] = enumObj?.enumName || {}
+    enumObj[enumName]['NAME'] = enumName
+    enumObj[enumName]['VALUE'] = definition[enumName]
+  }
+  return enumObj
 }

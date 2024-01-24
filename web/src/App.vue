@@ -29,34 +29,6 @@ import { constant } from '@/utils/constant.js'
 //   window.posttiger.plugins = []
 // }
 
-// 注册插件
-window.posttiger.plugins = []
-window.posttiger.register = (plugin) => {
-  let plugins = window.posttiger.plugins
-  // 判断当前plugins是否存在插件名称 存在则删除 重新注册
-  let existPluginInfo = plugins.filter((p) => {
-    return p.name === plugin.name
-  })
-  if (existPluginInfo.length > 0) {
-    // 移除
-    window.posttiger.plugins = window.posttiger.plugins.filter((p) => {
-      return p.name !== plugin.name
-    })
-  }
-  // 加入 判断是否启用
-  if (plugin.enable) {
-    console.log('注册插件', plugin)
-    window.posttiger.plugins.push(plugin)
-    // 排序
-    window.posttiger.plugins.sort((a, b) => {
-      // order越大优先级越大，没有设置默认最小
-      let aOrder = a?.order || 1
-      let bOrder = b?.order || 1
-      return aOrder - bOrder
-    })
-  }
-}
-
 // 加载插件列表
 
 import 'ninja-keys'
@@ -79,6 +51,24 @@ const hotkeys = ref([
   },
 ])
 
+// 注册全局快捷键
+import hotkeysJs from 'hotkeys-js'
+let keydownData = constant.KEYDOWN || {}
+for (let keydownDataItemKey in keydownData) {
+  console.log(
+    '注册全局快捷键',
+    keydownDataItemKey,
+    keydownData[keydownDataItemKey].VALUE,
+  )
+  hotkeysJs(keydownData[keydownDataItemKey].VALUE, function (event, handler) {
+    console.log('发送快捷键事件', handler.key)
+    bus.emit(constant.BUS.KEYDOWN_ACTION, {
+      type: keydownDataItemKey,
+      event: handler,
+    })
+  })
+}
+
 // 改变布局
 const apiColSize = ref(18)
 
@@ -95,6 +85,7 @@ onMounted(() => {
     initElementUiCss()
     loadDbPlugins()
     loadApiList()
+    registerPlugins()
   })
   bus.on('themePlugin:changeTheme', (data) => {
     if (data[0] === 'reset') {
@@ -129,6 +120,16 @@ onMounted(() => {
   })
 })
 
+const finishRegisterPlugins = ref(false)
+function registerPlugins() {
+  enablePlugins.value = window.posttiger
+    .db(constant.COLLECTION.API_PLUGINS)
+    .collection.find()
+  console.log('enablePlugins', enablePlugins.value)
+  setTimeout(() => {
+    finishRegisterPlugins.value = true
+  }, 3000)
+}
 function loadDbPlugins() {
   let plugins = window.posttiger
     .db(constant.COLLECTION.API_PLUGINS)
@@ -152,24 +153,6 @@ function loadDbPlugins() {
 }
 
 function loadApiList() {
-  // let plugins = window.posttiger
-  //   .db(constant.COLLECTION.API_PLUGINS)
-  //   .collection.find()
-  // let pluginsPane = {
-  //   id: '接口管理',
-  //   title: '接口管理',
-  //   children: [],
-  // }
-  // for (let item of plugins) {
-  //   pluginsPane.children.push({
-  //     id: item.id,
-  //     title: item.name,
-  //     handler: () => {
-  //       loadingPlugin(item.id)
-  //     },
-  //   })
-  // }
-  // console.log(pluginsPane)
   hotkeys.value.push({
     id: '接口管理',
     title: '接口管理',
@@ -201,85 +184,10 @@ function initElementUiCss() {
   }
 }
 
-// document.documentElement.classList.add('dark')
-// console.log(document.documentElement)
-// setTimeout(() => {
-//   document.documentElement.style.setProperty('--el-color-primary', 'red')
-// }, 3000)
-
-import jsf from 'json-schema-faker'
-import JsonEditor from '@/components/JsonEditor.vue'
-const schema = {
-  title: 'Pet',
-  type: 'object',
-  required: ['name'],
-  properties: {
-    name: {
-      type: 'string',
-      minLength: 1,
-      maxLength: 25,
-    },
-    type: {
-      type: 'string',
-      enum: ['cat', 'dog', 'fish', 'bird'],
-    },
-    birthdate: {
-      type: 'string',
-      format: 'date',
-    },
-    owner: {
-      title: 'Pet Owner',
-      type: 'object',
-      required: ['name'],
-      properties: {
-        name: {
-          type: 'object',
-          required: ['first', 'last'],
-          properties: {
-            first: {
-              type: 'string',
-              minLength: 1,
-              maxLength: 25,
-            },
-            last: {
-              type: 'string',
-              minLength: 1,
-              maxLength: 25,
-            },
-          },
-        },
-        address: {
-          title: 'Address',
-          type: 'object',
-          properties: {
-            street1: {
-              type: 'string',
-            },
-            street2: {
-              type: 'string',
-            },
-            city: {
-              type: 'string',
-            },
-            state: {
-              type: 'string',
-            },
-            postalCode: {
-              type: 'string',
-            },
-          },
-        },
-      },
-    },
-  },
-}
-const syncValue = jsf.generate(schema)
-console.log('syncValue', syncValue)
-const bodyJson = ref({})
-
 import SfcPlugin from '@/views/plugin/index.vue'
 const showPlugin = ref(false)
 
+const enablePlugins = ref([])
 const currentPluginId = ref('')
 const loadingPlugin = (id) => {
   currentPluginId.value = id
@@ -318,6 +226,16 @@ const loadingPlugin = (id) => {
   <loading :active="!dbLoadingFinish"></loading>
 
   <div v-if="dbLoadingFinish">
+    <div>
+      <div
+        v-for="(item, index) in enablePlugins"
+        v-show="false"
+        v-if="!finishRegisterPlugins"
+      >
+        <custom-form :sfc="item.sfc"></custom-form>
+      </div>
+    </div>
+
     <sfc-plugin :id="currentPluginId" v-if="showPlugin"></sfc-plugin>
 
     <ninja-keys
@@ -337,11 +255,7 @@ const loadingPlugin = (id) => {
       test
       <custom-form :sfc="sfc2"></custom-form>
     </div> -->
-    <!-- <div v-for="(item, index) in enablePlugins" v-show="false">
-      {{ item.name }}
-      <custom-form :sfc="item.sfc"></custom-form>
-    </div>
-    <send-form></send-form> -->
+    <!-- <send-form></send-form> -->
     <!--    <el-row>-->
     <!--      <el-col :span="24" style="margin-bottom: 5px">-->
     <!--        <el-card>-->

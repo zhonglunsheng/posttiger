@@ -2,11 +2,10 @@
   <el-row>
     <el-col :span="12">
       <el-input
-        size="small"
         placeholder="输入接口名称或url进行搜索"
         clearable
         v-model="queryApiInfo"
-        @input="queryApi"
+        @keydown.enter="queryApi"
       ></el-input>
     </el-col>
     <el-col :span="12">
@@ -65,7 +64,7 @@
         }
       "
       :allow-drop="allowDrop"
-      :data="data"
+      :data="apiTreeNodeData"
       :default-expand-all="false"
       draggable
       :expand-on-click-node="true"
@@ -132,7 +131,7 @@
                   </el-dropdown-item>
                   <el-dropdown-item
                     icon="DeleteFilled"
-                    @click="remove(node, data)"
+                    @click="remove(data.id)"
                   >
                     删除
                   </el-dropdown-item>
@@ -182,7 +181,7 @@ const OperationNode = () => {
         }
       })
       checkNodeList.value = []
-      loadTreeDataFromDb()
+      apiTreeNodeData.value = window.posttiger.node.getTreeNode()
     })
     .catch((e) => {
       console.log(e)
@@ -199,7 +198,7 @@ const editNode = () => {
 
 const queryApiInfo = ref('')
 
-let data = ref(
+let apiTreeNodeData = ref(
   lib.util.buildTree(
     window.posttiger.db(constant.COLLECTION.API_LIST).collection.find(),
     0,
@@ -207,11 +206,12 @@ let data = ref(
 )
 
 const queryApi = (value) => {
+  value = queryApiInfo.value
   if (!value) {
     let filterData = window.posttiger
       .db(constant.COLLECTION.API_LIST)
       .collection.find()
-    data.value = lib.util.buildTree(filterData, 0)
+    apiTreeNodeData.value = lib.util.buildTree(filterData, 0)
     return
   }
   let filterData = window.posttiger
@@ -244,7 +244,7 @@ const queryApi = (value) => {
     .filter((item) => {
       return totalParentIds.includes(item.id)
     })
-  data.value = lib.util.buildTree(filterData, 0)
+  apiTreeNodeData.value = lib.util.buildTree(filterData, 0)
 }
 
 const handleDrag = (draggingNod, dropNode, ev) => {
@@ -259,8 +259,9 @@ const append = (data, nodeType) => {
   let label = nodeType === 'api' ? '新增接口' : '新增目录'
 
   function addData(label) {
+    let id = uid()
     const newChild = {
-      id: uid(),
+      id: id,
       label: label,
       parentId: data.id,
       children: [],
@@ -270,8 +271,12 @@ const append = (data, nodeType) => {
     if (!data.children) {
       data.children = []
     }
-    data.children.push(newChild)
+    window.posttiger
+      .db(constant.COLLECTION.API_LIST)
+      .insertOrUpdate({ id: id }, newChild)
     updateApiList()
+    // 新增接口后默认打开详情页面
+    bus.emit(constant.BUS.OPEN_API_DETAIL, { id: id })
   }
 
   if (label === '新增目录') {
@@ -299,22 +304,29 @@ const allowDrop = (draggingNode, dropNode, type) => {
 
 const nodeClick = (node) => {
   if (node.nodeType === 'api') {
-    bus.emit('openApiDetail', node)
+    bus.emit(constant.BUS.OPEN_API_DETAIL, { id: node.id })
   } else if (node.nodeType === 'directory') {
     bus.emit('openDirectoryDetail', node)
   }
 }
 
 function loadTreeDataFromDb() {
-  data.value = lib.util.buildTree(
-    window.posttiger.db(constant.COLLECTION.API_LIST).collection.find(),
-    0,
-  )
+  apiTreeNodeData.value = window.posttiger.node.getTreeNode()
 }
 
 onMounted(() => {
   bus.on(constant.BUS.SAVE_API, () => {
     loadTreeDataFromDb()
+  })
+
+  bus.on(constant.BUS.REMOVE_API_ACTION, (node) => {
+    // 获取节点ID信息
+    remove(node.id)
+  })
+
+  bus.on(constant.BUS.REMOVE_API_EVENT, (node) => {
+    // 获取节点ID信息
+    window.posttiger.node.deleteAllNodeById(node.id)
   })
 
   bus.on(constant.BUS.REFRESH_API_TREE_NODE, () => {
@@ -323,62 +335,28 @@ onMounted(() => {
 
   bus.on(constant.BUS.REMOVE_ALL_API_BY_NODE_ID, (nodeId) => {
     // 获取节点ID信息
-    let data =
-      window.posttiger
-        .db(constant.COLLECTION.API_LIST)
-        .collection.findOne({ id: nodeId }) || {}
-    console.log('REMOVE_ALL_API_BY_NODE_ID', nodeId, data)
-    deleteChildren(data?.children || [])
-    // 删除当前节点
-    window.posttiger
-      .db(constant.COLLECTION.API_LIST)
-      .removeByCondition({ id: nodeId })
+    window.posttiger.node.deleteAllNodeById(nodeId)
   })
 })
 
+/**
+ * 重新从数据库api列表获取到所有数据，然后构建一颗树型结构
+ */
 const updateApiList = () => {
-  let copyData = JSON.parse(JSON.stringify(data.value))
-  let convertArr = lib.util.treeToArray(copyData)
-  console.log(data.value, 'convertArr')
-  window.posttiger.db(constant.COLLECTION.API_LIST).cleanInsert(convertArr)
-  let apiInfoList = window.posttiger
-    .db(constant.COLLECTION.API_LIST)
-    .collection.find()
-  data.value = lib.util.buildTree(apiInfoList, 0)
+  apiTreeNodeData.value = window.posttiger.node.getTreeNode()
 }
 
 // 增加添加项目弹框
 import { ElMessage, ElMessageBox } from 'element-plus'
-
-/**
- * 递归删除子节点
- * @param children
- */
-function deleteChildren(children) {
-  children.forEach((item) => {
-    if (item.children && item.children.length > 0) {
-      deleteChildren(item.children)
-    }
-    window.posttiger
-      .db(constant.COLLECTION.API_LIST)
-      .removeByCondition({ id: item.id })
-  })
-}
-
-const remove = (node, data) => {
+const remove = (apiId) => {
   ElMessageBox.alert('是否删除？', 'Title', {
     confirmButtonText: 'OK',
     callback: (action) => {
       console.log(action)
       if (action === 'confirm') {
-        const parent = node.parent
-        // 递归删除子节点
-        console.log(node.data)
-        deleteChildren(node.data.children || [])
-        const children = parent.data.children || parent.data
-        const index = children.findIndex((d) => d.id === data.id)
-        children.splice(index, 1)
-        updateApiList()
+        window.posttiger.node.deleteAllNodeById(apiId)
+        apiTreeNodeData.value = window.posttiger.node.getTreeNode()
+        bus.emit(constant.BUS.REMOVE_API_EVENT, { id: apiId })
       }
     },
   })

@@ -27,7 +27,7 @@
           <el-icon v-else>
             <StarFilled />
           </el-icon>
-          <span>&nbsp;{{ item.title }}</span>
+          <span>&nbsp;{{ item.content.label }}</span>
         </span>
       </template>
       <send-form :apiInfoProps="item.content"></send-form>
@@ -210,8 +210,21 @@ const closeOthersTabs = () => {
   editableTabsValue.value = currentTabMenus.value
 }
 
+function removeTabByApiId(id) {
+  // 根据ID移除元素
+  editableTabs.value = editableTabs.value.filter((tab) => tab.name !== id)
+  // 当前激活tab为最后一个元素，如果tabs为空，则设置为空
+  if (editableTabs.value.length === 0) {
+    editableTabsValue.value = ''
+    return
+  }
+  // 当前激活tab为最后一个元素
+  editableTabsValue.value =
+    editableTabs.value[editableTabs.value.length - 1]?.name
+}
+
 onMounted(() => {
-  bus.on('openApiDetail', (node) => {
+  bus.on(constant.BUS.OPEN_API_DETAIL, (node) => {
     console.log(node, 'openApiDetail')
     let apiInfoItem = window.posttiger
       .db('apiList')
@@ -235,7 +248,7 @@ onMounted(() => {
   bus.on('*', (type, e) => {
     if (
       [
-        'openApiDetail',
+        constant.BUS.OPEN_API_DETAIL,
         'saveApi',
         'tabRemove',
         constant.BUS.NEW_API_TAB,
@@ -339,20 +352,15 @@ onMounted(() => {
     console.log('ADD_TO_THE_RECYCLE_BIN', apiInfo)
     // 添加到回收站，自动刷新当前tabs列表
     const id = apiInfo.id
-    // 根据ID移除元素
-    editableTabs.value = editableTabs.value.filter((tab) => tab.name !== id)
-    // 当前激活tab为最后一个元素，如果tabs为空，则设置为空
-    if (editableTabs.value.length === 0) {
-      editableTabsValue.value = ''
-      return
-    }
-    // 当前激活tab为最后一个元素
-    editableTabsValue.value =
-      editableTabs.value[editableTabs.value.length - 1]?.name
+    removeTabByApiId(id)
   })
 
   bus.on(constant.BUS.CLOSE_ALL_TAB_LIST, () => {
     closeAllTabs()
+  })
+
+  bus.on(constant.BUS.REMOVE_API_EVENT, (api) => {
+    removeTabByApiId(api.id)
   })
 })
 </script>

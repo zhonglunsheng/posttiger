@@ -20,7 +20,7 @@ const saveVariable = () => {
 
 onMounted(() => {
   console.log('注册插件')
-  window.posttiger.register({
+  window.posttiger.plugins.register({
     name: '变量替换插件',
     beforePost: (apiInfo) => {
       // 获取当前环境
