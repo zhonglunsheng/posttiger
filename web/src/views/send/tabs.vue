@@ -361,11 +361,11 @@ onMounted(() => {
     copyCurrentApiInfo.label = copyCurrentApiInfo.label + '-用例'
     copyCurrentApiInfo.children = []
     if (copyCurrentApiInfo.nodeType !== constant.NODE_TYPE.USER_CASE) {
-      // 当在用例界面增加用例时，默认父级为当前用例的父级
-      copyCurrentApiInfo.parentId = copyCurrentApiInfo.id
+      // 当在用例界面增加用例时，若当前打开tab节点类型为接口，则新增用例的父级为当前api的id
+      copyCurrentApiInfo.parentId = currentApiInfo.id
     }
     copyCurrentApiInfo.nodeType = constant.NODE_TYPE.USER_CASE
-
+    console.log(copyCurrentApiInfo)
     editableTabs.value.push({
       title: copyCurrentApiInfo.label,
       name: id,

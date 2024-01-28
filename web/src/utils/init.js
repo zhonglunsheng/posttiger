@@ -84,6 +84,7 @@ const initTreeParent = () => {
   if (!parentNode) {
     window.posttiger.db('apiList').insert({
       parentId: 0,
+      nodeType: constant.NODE_TYPE.DIR,
       id: 1,
       label: '个人项目',
     })
