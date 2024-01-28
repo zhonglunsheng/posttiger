@@ -256,6 +256,7 @@ const initPosttiger = () => {
     node: initPosttigerNode(),
     ...posttiger,
     plugins: initPosttigerPlugins(),
+    util: lib.util,
   }
   let posttigerAppUrl = window.localStorage.getItem('posttigerAppUrl')
   if (posttigerAppUrl) {

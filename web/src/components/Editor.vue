@@ -122,7 +122,7 @@ const editorMounted = (editor) => {
   }
 }
 
-const emit = defineEmits(['changeData'])
+const emit = defineEmits(['updateCurrentTabStatus'])
 const changeData = (value) => {
   emit('changeData', value)
 }

@@ -225,6 +225,31 @@ const func = {
     findParentNodeByTreeByNodeType: findParentNodeByTreeByNodeType,
 
     findParentNodeByTree: findParentNodeByTree,
+
+    // 定义一个防抖函数
+    debounce: (fn, delay) => {
+      let timeout
+      return function () {
+        clearTimeout(timeout)
+        timeout = setTimeout(() => {
+          fn.apply(this, arguments)
+        }, delay)
+      }
+    },
+
+    throttle: (func, wait, timer) => {
+      return () => {
+        if (timer) {
+          console.log('timer return')
+          return
+        }
+        timer = setTimeout(() => {
+          func()
+          timer = null
+        }, wait)
+        console.log('timer has value', timer)
+      }
+    },
   },
 }
 

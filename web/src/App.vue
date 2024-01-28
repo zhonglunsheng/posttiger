@@ -61,6 +61,7 @@ for (let keydownDataItemKey in keydownData) {
     keydownData[keydownDataItemKey].VALUE,
   )
   hotkeysJs(keydownData[keydownDataItemKey].VALUE, function (event, handler) {
+    event.preventDefault()
     console.log('发送快捷键事件', handler.key)
     bus.emit(constant.BUS.KEYDOWN_ACTION, {
       type: keydownDataItemKey,

@@ -32,9 +32,9 @@ const props = defineProps({
 
 const state = ref(props.data)
 
-const emit = defineEmits(['changeData'])
+const emit = defineEmits(['updateCurrentTabStatus'])
 const change = (data) => {
-  emit('changeData', data)
+  emit('updateCurrentTabStatus', data)
 }
 interface LinkItem {
   value: string
@@ -43,14 +43,14 @@ interface LinkItem {
 
 watchEffect(() => {
   let changeValue = state.value
-  emit('changeData', changeValue)
+  emit('updateCurrentTabStatus', changeValue)
 })
 const links = ref<LinkItem[]>([])
 
 let currentMouseClickPoint = 0
 const clickInput = ($event) => {
   currentMouseClickPoint = $event.srcElement.selectionStart
-  emit('changeData', state.value)
+  emit('updateCurrentTabStatus', state.value)
 }
 
 let currentInputValue = ''

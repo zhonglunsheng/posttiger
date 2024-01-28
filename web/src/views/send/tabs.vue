@@ -36,7 +36,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watchEffect } from 'vue'
+import { onMounted, ref, watchEffect, watch } from 'vue'
 import { menusEvent } from 'vue3-menus'
 import bus from 'vue3-eventbus'
 import SendForm from '@/views/send/index.vue'
@@ -136,17 +136,36 @@ function updateTabSaveStatus() {
   }
 }
 
-watchEffect(() => {
-  const currentTabName = editableTabsValue.value
-  console.log('当前激活tab名称', currentTabName)
-  tabClick(
-    {
-      paneName: currentTabName,
-    },
-    null,
-  )
-  updateTabSaveStatus()
-})
+let timer = null
+const updateCurrentTabStatus = () => {
+  if (timer != null) {
+    clearTimeout(timer)
+    timer = null
+  }
+  timer = setTimeout(() => {
+    const currentTabName = editableTabsValue.value
+    console.log('当前激活tab名称', currentTabName)
+    tabClick(
+      {
+        paneName: currentTabName,
+      },
+      null,
+    )
+    updateTabSaveStatus()
+  }, 2000)
+}
+
+watch(
+  () => editableTabs,
+  (v1, v2) => {
+    updateCurrentTabStatus()
+  },
+  {
+    deep: true, // 深度监听的参数
+  },
+)
+
+watchEffect(() => {})
 
 const handleTabsEdit = (targetName, action) => {
   if (action === 'add') {
@@ -293,6 +312,13 @@ onMounted(() => {
 
   bus.on(constant.BUS.NEW_API_TAB, () => {
     addNewApiTab()
+  })
+
+  bus.on(constant.BUS.KEYDOWN_ACTION, (data) => {
+    console.log(constant.KEYDOWN.NEW_API_TAB.NAME, data)
+    if (constant.KEYDOWN.NEW_API_TAB.NAME === data.type) {
+      addNewApiTab()
+    }
   })
 
   bus.on(constant.BUS.CLONE_API, () => {

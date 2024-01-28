@@ -44,7 +44,7 @@ const options = ref({
   ...props.options,
 })
 
-const emit = defineEmits(['changeData'])
+const emit = defineEmits(['updateCurrentTabStatus'])
 
 let vueEditor = null
 function handleAfter(editor) {

@@ -208,42 +208,52 @@ let apiTreeNodeData = ref(
 const queryApi = (value) => {
   value = queryApiInfo.value
   if (!value) {
-    let filterData = window.posttiger
-      .db(constant.COLLECTION.API_LIST)
-      .collection.find()
-    apiTreeNodeData.value = lib.util.buildTree(filterData, 0)
+    apiTreeNodeData.value = window.posttiger.node.getTreeNode()
     return
   }
-  let filterData = window.posttiger
-    .db(constant.COLLECTION.API_LIST)
-    .collection.find()
-    .filter((item) => {
-      return item.label.includes(value) || item.url?.includes(value)
-    })
+  let filterData = [
+    ...window.posttiger
+      .db(constant.COLLECTION.API_LIST)
+      .collection.find()
+      .filter((item) => {
+        return item.label.includes(value) || item.url?.includes(value)
+      }),
+  ]
 
   // 搜索结果的父节点也要展示
-  let totalParentIds = filterData.map((item) => {
-    return item.id
-  })
+  let totalParentIds = []
   function findTotalParentIds(totalParentIds, filterData) {
     filterData.forEach((item) => {
-      if (item.parentId !== 0) {
-        totalParentIds.push(item.parentId)
-        let parentData = window.posttiger
-          .db(constant.COLLECTION.API_LIST)
-          .collection.find({ id: item.parentId })
-        findTotalParentIds(totalParentIds, parentData)
+      console.log(item)
+      if (!item.parentId || item.parentId === 0) {
+        return
       }
+      let parentData = [
+        ...window.posttiger
+          .db(constant.COLLECTION.API_LIST)
+          .collection.find({ id: item.parentId }),
+      ]
+      if (!parentData || !parentData.length) {
+        return
+      }
+      totalParentIds.push(item.parentId)
+      findTotalParentIds(totalParentIds, parentData)
     })
   }
 
   findTotalParentIds(totalParentIds, filterData)
-  filterData = window.posttiger
-    .db(constant.COLLECTION.API_LIST)
-    .collection.find()
-    .filter((item) => {
-      return totalParentIds.includes(item.id)
-    })
+  let allApiIdInfo = [...totalParentIds]
+  allApiIdInfo = allApiIdInfo.concat(filterData.map((item) => item.id))
+  filterData = JSON.parse(
+    JSON.stringify(
+      window.posttiger
+        .db(constant.COLLECTION.API_LIST)
+        .collection.find()
+        .filter((item) => {
+          return allApiIdInfo.includes(item.id)
+        }),
+    ),
+  )
   apiTreeNodeData.value = lib.util.buildTree(filterData, 0)
 }
 

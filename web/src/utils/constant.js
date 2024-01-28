@@ -42,6 +42,7 @@ export const constant = {
   },
   KEYDOWN: createEnum({
     SEND_API: 'ctrl+enter',
+    NEW_API_TAB: 'ctrl+alt+n',
   }),
 }
 
