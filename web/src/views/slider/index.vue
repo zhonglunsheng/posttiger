@@ -286,7 +286,7 @@ const append = (data, nodeType) => {
       .insertOrUpdate({ id: id }, newChild)
     updateApiList()
     // 新增接口后默认打开详情页面
-    bus.emit(constant.BUS.OPEN_API_DETAIL, { id: id })
+    nodeClick({ nodeType: nodeType })
   }
 
   if (label === '新增目录') {
