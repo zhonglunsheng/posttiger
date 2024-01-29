@@ -144,13 +144,12 @@ const updateCurrentTabStatus = () => {
   }
   timer = setTimeout(() => {
     const currentTabName = editableTabsValue.value
-    console.log('当前激活tab名称', currentTabName)
-    tabClick(
-      {
-        paneName: currentTabName,
-      },
-      null,
-    )
+    // tabClick(
+    //   {
+    //     paneName: currentTabName,
+    //   },
+    //   null,
+    // )
     updateTabSaveStatus()
   }, 2000)
 }
@@ -165,7 +164,21 @@ watch(
   },
 )
 
-watchEffect(() => {})
+// watchEffect(() => {
+//   console.log('保存当前API接口信息')
+//
+// })
+
+watch(
+  () => editableTabsValue,
+  (v1, v2) => {
+    console.log('当前激活tab名称', editableTabsValue.value)
+    tabClick({ paneName: editableTabsValue.value })
+  },
+  {
+    deep: true, // 深度监听的参数
+  },
+)
 
 const handleTabsEdit = (targetName, action) => {
   if (action === 'add') {
