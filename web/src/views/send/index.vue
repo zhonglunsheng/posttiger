@@ -10,6 +10,9 @@
           <template #prepend>接口名称</template>
         </el-input>
       </el-col>
+      <el-col :span="12">
+        <node-directory-select></node-directory-select>
+      </el-col>
     </el-row>
     <el-row :gutter="20">
       <el-col :span="16">
@@ -219,6 +222,7 @@
 <script setup>
 import { nextTick, onMounted, ref, watchEffect } from 'vue'
 import Editor from '@/components/Editor.vue'
+import NodeDirectorySelect from './nodeSelect.vue'
 import Config from '@/views/config/index.vue'
 import { sendApi } from '@/api/proxy'
 import AutoComplete from '@/components/AutoComplete.vue'

@@ -144,14 +144,15 @@ const updateCurrentTabStatus = () => {
   }
   timer = setTimeout(() => {
     const currentTabName = editableTabsValue.value
-    // tabClick(
-    //   {
-    //     paneName: currentTabName,
-    //   },
-    //   null,
-    // )
+    tabClick(
+      {
+        paneName: currentTabName,
+      },
+      null,
+    )
+    window.posttiger.db('apiTabs').cleanInsert(editableTabs.value)
     updateTabSaveStatus()
-  }, 2000)
+  }, 1000)
 }
 
 watch(
@@ -400,6 +401,24 @@ onMounted(() => {
 
   bus.on(constant.BUS.REMOVE_API_EVENT, (api) => {
     removeTabByApiId(api.id)
+  })
+
+  /**
+   * 更改当前api节点父级ID
+   */
+  bus.on(constant.BUS.NODE_REMOVE_DIRECTORY, (node) => {
+    let apiInfo = editableTabs.value.filter((tab) => {
+      return tab.name === editableTabsValue.value
+    })[0].content
+    console.log('更新当前api父级id', node, apiInfo)
+    apiInfo.parentId = node.parentId
+    window.posttiger
+      .db(constant.COLLECTION.API_LIST)
+      .insertOrUpdate({ id: apiInfo.id }, apiInfo)
+    // 更新节点树
+    setTimeout(() => {
+      bus.emit(constant.BUS.REFRESH_API_TREE_NODE)
+    }, 100)
   })
 })
 </script>

@@ -340,7 +340,9 @@ onMounted(() => {
   })
 
   bus.on(constant.BUS.REFRESH_API_TREE_NODE, () => {
+    console.log('start refresh node')
     loadTreeDataFromDb()
+    console.log('end refresh node')
   })
 
   bus.on(constant.BUS.REMOVE_ALL_API_BY_NODE_ID, (nodeId) => {

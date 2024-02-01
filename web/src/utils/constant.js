@@ -24,6 +24,8 @@ export const constant = {
     REMOVE_API_ACTION: 'REMOVE_API_ACTION',
     // 键盘监听广播事件
     KEYDOWN_ACTION: 'KEYDOWN_ACTION',
+    // 节点移动到其他目录下
+    NODE_REMOVE_DIRECTORY: 'NODE_REMOVE_DIRECTORY',
   },
   NODE_TYPE: {
     API: 'api',
