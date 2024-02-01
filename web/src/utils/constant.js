@@ -26,6 +26,8 @@ export const constant = {
     KEYDOWN_ACTION: 'KEYDOWN_ACTION',
     // 节点移动到其他目录下
     NODE_REMOVE_DIRECTORY: 'NODE_REMOVE_DIRECTORY',
+    // 打开插件
+    OPEN_PLUGIN_MODAL: 'OPEN_PLUGINS_MODAL',
   },
   NODE_TYPE: {
     API: 'api',
@@ -38,6 +40,7 @@ export const constant = {
     API_LIST: 'apiList',
     API_PLUGINS: 'apiPlugins',
     API_TAB_CONFIG: 'apiTabConfig',
+    GLOBAL_CONFIG: 'globalConfig',
   },
   COMMON: {
     RECYCLE_ID: 999999,

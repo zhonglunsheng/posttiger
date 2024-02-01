@@ -313,7 +313,11 @@ const allowDrop = (draggingNode, dropNode, type) => {
 }
 
 const nodeClick = (node) => {
-  if (node.nodeType === 'api') {
+  if (
+    [constant.NODE_TYPE.API, constant.NODE_TYPE.USER_CASE].includes(
+      node.nodeType,
+    )
+  ) {
     bus.emit(constant.BUS.OPEN_API_DETAIL, { id: node.id })
   } else if (node.nodeType === 'directory') {
     bus.emit('openDirectoryDetail', node)

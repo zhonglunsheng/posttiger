@@ -119,6 +119,10 @@ onMounted(() => {
       apiColSize.value = 24
     }
   })
+
+  bus.on(constant.BUS.OPEN_PLUGIN_MODAL, (plugin) => {
+    loadingPlugin(plugin.id)
+  })
 })
 
 const finishRegisterPlugins = ref(false)
@@ -224,8 +228,14 @@ const loadingPlugin = (id) => {
 </script>
 
 <template>
-  <loading :active="!dbLoadingFinish"></loading>
-
+  <loading
+    :active="!dbLoadingFinish"
+    transition="bounce"
+    color="#0c61c9"
+    loader="bars"
+    opacity="1"
+    background-color="#f5f7fa"
+  ></loading>
   <div v-if="dbLoadingFinish">
     <div>
       <div
@@ -251,11 +261,11 @@ const loadingPlugin = (id) => {
 
     <!-- <router-view></router-view> -->
     <!-- 测试sfc
-    <el-button @click="pluginsConfigSwitch">关闭</el-button>
-    <div v-if="status">
-      test
-      <custom-form :sfc="sfc2"></custom-form>
-    </div> -->
+      <el-button @click="pluginsConfigSwitch">关闭</el-button>
+      <div v-if="status">
+        test
+        <custom-form :sfc="sfc2"></custom-form>
+      </div> -->
     <!-- <send-form></send-form> -->
     <!--    <el-row>-->
     <!--      <el-col :span="24" style="margin-bottom: 5px">-->
@@ -278,9 +288,65 @@ const loadingPlugin = (id) => {
       </el-col>
     </el-row>
   </div>
+  <!--  <div v-else class="loading"></div>-->
 </template>
 <style>
 ninja-keys {
   --ninja-z-index: 999;
+}
+.loading {
+  margin-top: calc(50vh - 100px);
+  margin-left: calc(50vw - 100px);
+  width: 200px;
+  height: 200px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border-top: 10px solid #e74c3c;
+  position: relative;
+  animation: a1 2s linear infinite;
+}
+
+.loading::before,
+.loading::after {
+  content: '';
+  width: 200px;
+  height: 200px;
+  position: absolute;
+  left: 0;
+  top: -10px;
+  box-sizing: border-box;
+  border-radius: 50%;
+}
+
+.loading::before {
+  border-top: 10px solid #e67e22;
+  transform: rotate(120deg);
+}
+
+.loading::after {
+  border-top: 10px solid #3498db;
+  transform: rotate(240deg);
+}
+
+.loading span {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  color: #fff;
+  text-align: center;
+  line-height: 200px;
+  animation: a2 2s linear infinite;
+}
+
+@keyframes a1 {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes a2 {
+  to {
+    transform: rotate(-360deg);
+  }
 }
 </style>

@@ -54,7 +54,7 @@ console.log('pluginInfo', pluginInfo)
 const apiPlugin = ref(pluginInfo)
 
 const visible = ref(true)
-const fullscreen = ref(false)
+const fullscreen = ref(true)
 const openFullScreen = () => {
   fullscreen.value = !fullscreen.value
 }

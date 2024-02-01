@@ -36,7 +36,7 @@ const changeSelect = (value) => {
   <el-select
     v-model="selectDirectoryNodeName"
     @change="changeSelect"
-    style="width: 200px"
+    style="width: 100%"
     filterable
     clearable
   >

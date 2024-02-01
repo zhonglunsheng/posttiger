@@ -10,8 +10,11 @@
           <template #prepend>接口名称</template>
         </el-input>
       </el-col>
-      <el-col :span="12">
+      <el-col :span="4">
         <node-directory-select></node-directory-select>
+      </el-col>
+      <el-col :span="8">
+        <quick-visited></quick-visited>
       </el-col>
     </el-row>
     <el-row :gutter="20">
@@ -40,28 +43,14 @@
             ></auto-complete>
           </el-col>
         </el-row>
-
-        <!--        <el-input v-model="apiInfo.url" placeholder="接口请求地址">-->
-        <!--          <template #prepend>-->
-        <!--            <el-select-->
-        <!--              v-model="apiInfo.method"-->
-        <!--              placeholder="请求方式"-->
-        <!--              style="width: 115px"-->
-        <!--            >-->
-        <!--              <el-option label="GET" value="GET" />-->
-        <!--              <el-option label="POST" value="POST" />-->
-        <!--              <el-option label="PUT" value="PUT" />-->
-        <!--              <el-option label="DELETE" value="DELETE" />-->
-        <!--            </el-select>-->
-        <!--          </template>-->
-        <!--        </el-input>-->
       </el-col>
       <el-col :span="8">
-        <el-button type="success" @click="send">发送</el-button>
-        <el-button type="primary" @click="savaApiInfo">保存</el-button>
-        <el-button type="primary" @click="cloneApi">克隆</el-button>
-        <el-button type="warning" @click="recyclingAPI">回收站</el-button>
-        <el-dropdown style="margin-left: 5px">
+        <el-button-group class="ml-4">
+          <el-button type="success" @click="send">发送</el-button>
+          <el-button type="primary" @click="savaApiInfo">保存</el-button>
+          <el-button type="warning" @click="cloneApi">克隆</el-button>
+        </el-button-group>
+        <el-dropdown>
           <el-button type="primary">
             更多
             <el-icon class="el-icon--right">
@@ -70,6 +59,7 @@
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
+              <el-dropdown-item @click="recyclingAPI">回收站</el-dropdown-item>
               <el-dropdown-item @click="closeApiTabList">
                 关闭所有标签
               </el-dropdown-item>
@@ -223,6 +213,7 @@
 import { nextTick, onMounted, ref, watchEffect } from 'vue'
 import Editor from '@/components/Editor.vue'
 import NodeDirectorySelect from './nodeSelect.vue'
+import QuickVisited from './quickVisited.vue'
 import Config from '@/views/config/index.vue'
 import { sendApi } from '@/api/proxy'
 import AutoComplete from '@/components/AutoComplete.vue'
