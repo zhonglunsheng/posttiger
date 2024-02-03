@@ -183,6 +183,7 @@ const initPosttigerNode = () => {
       posttiger
         .db(constant.COLLECTION.API_LIST)
         .removeByCondition({ id: nodeId })
+      debugger
       return deleteNode(nodeInfo?.children || [])
     },
     /**
@@ -209,7 +210,6 @@ const initPosttigerNode = () => {
     findAllChildrenNodeById: (nodeId) => {
       let res = []
       function findChildrenNode(children, res) {
-        debugger
         for (let nodeInfo of children) {
           if (nodeInfo) {
             let children = nodeInfo.children || []

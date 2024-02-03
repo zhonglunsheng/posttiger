@@ -124,19 +124,23 @@ const updateApiInfoList = (apiInfoList) => {
 }
 
 const buildTree = (nodes, parentId) => {
-  const tree = []
+  function buildTreeHandler(nodes, parentId) {
+    const tree = []
 
-  nodes.forEach((node) => {
-    if (node.parentId === parentId) {
-      const children = buildTree(nodes, node.id)
-      if (children.length > 0) {
-        node.children = children
+    nodes.forEach((node) => {
+      if (node.parentId === parentId) {
+        const children = buildTreeHandler(nodes, node.id)
+        if (children.length > 0) {
+          node.children = children
+        } else {
+          node.children = null
+        }
+        tree.push(node)
       }
-      tree.push(node)
-    }
-  })
-
-  return tree
+    })
+    return tree
+  }
+  return buildTreeHandler(JSON.parse(JSON.stringify(nodes)), parentId)
 }
 
 const treeToArray = (tree) => {

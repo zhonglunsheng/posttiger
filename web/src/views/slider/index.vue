@@ -338,15 +338,8 @@ onMounted(() => {
     remove(node.id)
   })
 
-  bus.on(constant.BUS.REMOVE_API_EVENT, (node) => {
-    // 获取节点ID信息
-    window.posttiger.node.deleteAllNodeById(node.id)
-  })
-
   bus.on(constant.BUS.REFRESH_API_TREE_NODE, () => {
-    console.log('start refresh node')
     loadTreeDataFromDb()
-    console.log('end refresh node')
   })
 
   bus.on(constant.BUS.REMOVE_ALL_API_BY_NODE_ID, (nodeId) => {
@@ -368,11 +361,12 @@ const remove = (apiId) => {
   ElMessageBox.alert('是否删除？', 'Title', {
     confirmButtonText: 'OK',
     callback: (action) => {
-      console.log(action)
       if (action === 'confirm') {
         window.posttiger.node.deleteAllNodeById(apiId)
         apiTreeNodeData.value = window.posttiger.node.getTreeNode()
-        bus.emit(constant.BUS.REMOVE_API_EVENT, { id: apiId })
+        setTimeout(() => {
+          bus.emit(constant.BUS.REMOVE_API_EVENT, { id: apiId })
+        }, 100)
       }
     },
   })
