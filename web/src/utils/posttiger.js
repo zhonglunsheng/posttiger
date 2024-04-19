@@ -1,5 +1,11 @@
 export const posttiger = {
-  db: (collection) => {
+  /**
+   * 获取数据库表
+   * @param collection 表名
+   * @param init 如果不存在是否初始化
+   * @returns {{cleanInsert: (function(*): *), insert: (function(*): *), removeByCondition: removeByCondition, collection: *, insertOrUpdate: insertOrUpdate}}
+   */
+  db: (collection, init = false) => {
     let coll = window.db.getCollection(collection)
     coll = coll || window.db.addCollection(collection)
 

@@ -5,18 +5,18 @@ export const pluginsData = [
     id: 'def',
     meta: {
       revision: 0,
-      created: 1705850707527,
+      created: 1706799294514,
       version: 0,
     },
     $loki: 1,
   },
   {
     name: '备份数据',
-    sfc: "<script setup>\r\nconst backData = () => {\r\n  window.axios\r\n    .post('http://localhost:3000/backup', {\r\n      data: window.db.serialize(),\r\n    })\r\n    .then((res) => {\r\n      window.services.ui.ElMessage.success('数据备份云端成功')\r\n    })\r\n}\r\n\r\nconst syncData = () => {\r\n  window.axios\r\n    .get('http://localhost:3000/syncData')\r\n    .then((res) => {\r\n      console.log(res.data)\r\n      window.services.ui.ElMessage.success('同步数据成功，刷新浏览器生效')\r\n    })\r\n}\r\n</script>\r\n\r\n<template>\r\n  <el-button @click=\"backData\">备份数据</el-button>\r\n  <el-button @click=\"syncData\">同步最新数据</el-button>\r\n</template>\r\n\r\n<style scoped></style>",
+    sfc: "<script setup>\r\nconst backData = () => {\r\n  window.axios\r\n    .post('http://localhost:3000/backup', {\r\n      data: window.db.serialize(),\r\n    })\r\n    .then((res) => {\r\n      window.services.ui.ElMessage.success('数据备份云端成功')\r\n    })\r\n}\r\n\r\nconst syncData = () => {\r\n  window.axios\r\n    .get('http://localhost:3000/syncData')\r\n    .then((res) => {\r\n      window.db.loadJSON(res.data)\r\n      window.db.saveDatabase()\r\n      window.services.ui.ElMessage.success('同步数据成功，刷新浏览器生效')\r\n    })\r\n}\r\n</script>\r\n\r\n<template>\r\n  <el-button @click=\"backData\">备份数据</el-button>\r\n  <el-button @click=\"syncData\">同步最新数据</el-button>\r\n</template>\r\n\r\n<style scoped></style>",
     id: 'innerC',
     meta: {
       revision: 0,
-      created: 1705850707527,
+      created: 1706799294514,
       version: 0,
     },
     $loki: 2,
@@ -27,7 +27,7 @@ export const pluginsData = [
     id: 'innerD',
     meta: {
       revision: 0,
-      created: 1705850707527,
+      created: 1706799294514,
       version: 0,
     },
     $loki: 3,
@@ -38,7 +38,7 @@ export const pluginsData = [
     id: 'innerE',
     meta: {
       revision: 0,
-      created: 1705850707527,
+      created: 1706799294514,
       version: 0,
     },
     $loki: 4,
@@ -49,21 +49,10 @@ export const pluginsData = [
     sfc: '<script setup>\r\nimport { ref, onMounted } from \'vue\'\r\n// 读取API\r\nconst envVariable = ref(\r\n  window.posttiger.db(\'ApiDocPlugin\').collection.findOne()?.data || \'\'\r\n)\r\n\r\nconst saveVariable = () => {\r\n  window.posttiger\r\n    .db(\'ApiDocPlugin\')\r\n    .cleanInsert({data: envVariable.value})\r\n  window.services.ui.ElMessage.success(\'保存成功\')\r\n}\r\n\r\nlet timer = null\r\nconst changeData = (value) => {\r\n  envVariable.value = value\r\n  if (timer != null) {\r\n    clearTimeout(timer)\r\n    timer = null\r\n  }\r\n  timer = setTimeout(() => {\r\n    // 保存配置\r\n    saveVariable()\r\n  }, 5000)\r\n}\r\n</script>\r\n\r\n<template>\r\n  <el-row :gutter="20">\r\n    <el-col :span="24">\r\n      <div style="height: 80vh">\r\n        <Editor\r\n          language="text"\r\n          :code="envVariable"\r\n          @changeData="changeData"\r\n        ></Editor>\r\n      </div>\r\n  </el-row>\r\n</template>\r\n\r\n<style scoped></style>\r\n\r\n',
     meta: {
       revision: 0,
-      created: 1705850707527,
+      created: 1706799294514,
       version: 0,
     },
     $loki: 5,
-  },
-  {
-    id: '2041c04de29',
-    name: '测试插件',
-    sfc: '<template>\r\n<el-button type="primary">插件开发</el-button>\r\n</template>\r\n\r\n<script setup>\r\nimport { ref } from \'vue\'\r\n</script>\r\n',
-    meta: {
-      revision: 0,
-      created: 1705850707527,
-      version: 0,
-    },
-    $loki: 6,
   },
   {
     id: '60d2b5bed34',
@@ -71,32 +60,10 @@ export const pluginsData = [
     sfc: "<script setup>\r\nimport { ref, reactive } from 'vue'\r\n\r\nlet swagger = window.localStorage.getItem('swagger')\r\n  ? JSON.parse(window.localStorage.getItem('swagger'))\r\n  : {}\r\n\r\nconst swaggerUrl = ref(swagger.url || '')\r\n\r\nconst apiSize = ref(0)\r\nconst syncSwaggerApiUrl = ref(swagger.server || '')\r\nconst syncSwaggerApiVar = ref(swagger.serverVar || '')\r\nconst syncHistorySwaggerApiUrl = ref(swagger.history || [])\r\nconst syncSwaggerApi = () => {\r\n  window.axios\r\n    .post(window.posttiger.appUrl + '/api/swagger/sync/url', {\r\n      swaggerUrl: swaggerUrl.value,\r\n    })\r\n    .then((res) => {\r\n      window.localStorage.setItem(\r\n        'swagger',\r\n        JSON.stringify({\r\n          url: swaggerUrl.value,\r\n          server: res.data.server,\r\n          serverVar: syncSwaggerApiVar.value,\r\n          history: syncHistorySwaggerApiUrl.value,\r\n        }),\r\n      )\r\n      syncSwaggerApiUrl.value = res.data.server\r\n\r\n      let historyItem = swaggerUrl.value + '@@' + syncSwaggerApiVar.value\r\n\r\n      syncHistorySwaggerApiUrl.value = syncHistorySwaggerApiUrl.value.filter(\r\n        (item) => item !== historyItem,\r\n      )\r\n      syncHistorySwaggerApiUrl.value.push(historyItem)\r\n      console.log(res)\r\n      apiSize.value = 0\r\n      for (let item of res.data.apis) {\r\n        apiSize.value += item[Object.keys(item)[0]].length\r\n      }\r\n      saveSwaggerApi(res.data.apis, res.data.project + '(swagger同步)')\r\n    })\r\n}\r\n\r\nfunction saveSwaggerApi(apiInfoList, projectName) {\r\n  console.log('savaApiInfo', apiInfoList)\r\n  // 根据项目名称查找\r\n  let projectInfo =\r\n    window.posttiger.db('apiList').collection.findOne({ label: projectName }) ||\r\n    undefined\r\n\r\n  if (projectInfo) {\r\n    // 删除项目下所有API\r\n    window.bus.emit('REMOVE_ALL_API_BY_NODE_ID', projectInfo.id)\r\n  }\r\n\r\n  // 创建新的project\r\n  let insertData = []\r\n  // let apiInfo = {\r\n  //   id: window.lib.uid(),\r\n  //   headers: parseData.header\r\n  //       ? JSON.stringify(parseData.header, null, 2)\r\n  //       : '',\r\n  //   label: parseData.url,\r\n  //   nodeType: 'api',\r\n  //   parentId: 0,\r\n  //   requestBody: parseData.data\r\n  //       ? JSON.stringify(parseData.data, null, 2)\r\n  //       : '',\r\n  //   queryParams: parseData.params\r\n  //       ? JSON.stringify(parseData.params, null, 2)\r\n  //       : '',\r\n  //   requestHeader: '',\r\n  //   method: parseData.method,\r\n  //   url: parseData.url,\r\n  //   children: [],\r\n  // }\r\n  let projectId = window.lib.uid()\r\n  insertData.push({\r\n    id: projectId,\r\n    parentId: 0,\r\n    children: [],\r\n    nodeType: 'directory',\r\n    label: projectName,\r\n  })\r\n  for (let tagInfo of apiInfoList) {\r\n    for (let key in tagInfo) {\r\n      let tagId = window.lib.uid()\r\n      if (key) {\r\n        // 如果存在 tag 则单独创建一个目录\r\n        insertData.push({\r\n          id: tagId,\r\n          parentId: projectId,\r\n          children: [],\r\n          nodeType: 'directory',\r\n          label: key,\r\n        })\r\n      }\r\n      let tagApiInfoList = tagInfo[key]\r\n      for (let item of tagApiInfoList) {\r\n        insertData.push({\r\n          id: window.lib.uid(),\r\n          parentId: tagId,\r\n          children: [],\r\n          nodeType: 'api',\r\n          label: item.label,\r\n          url: syncSwaggerApiVar.value + item.url,\r\n          method: item.method,\r\n          queryParams: handleJsonStr(item.queryParams),\r\n          requestBody: handleJsonStr(item.requestBody),\r\n          headers: handleJsonStr(item.headers),\r\n        })\r\n      }\r\n    }\r\n  }\r\n\r\n  for (let data of insertData) {\r\n    window.posttiger.db('apiList').insert(data)\r\n  }\r\n  window.services.ui.ElMessage.success('同步成功')\r\n  window.bus.emit('REFRESH_API_TREE_NODE', {})\r\n}\r\n\r\n/**\r\n * 处理json字符串，格式化显示优化\r\n * @param jsonStr\r\n */\r\nfunction handleJsonStr(jsonStr) {\r\n  try {\r\n    if (jsonStr) {\r\n      let prettyJsonStr = JSON.stringify(JSON.parse(jsonStr), null, 2)\r\n      console.log(prettyJsonStr)\r\n      return prettyJsonStr\r\n    }\r\n  } catch (e) {\r\n    //ignore\r\n    console.log(e)\r\n  }\r\n  return jsonStr\r\n}\r\n</script>\r\n\r\n<template>\r\n  <h1>同步swagger接口信息</h1>\r\n  <el-row :gutter=\"20\">\r\n    <el-col :span=\"20\">\r\n      <el-input\r\n        v-model=\"swaggerUrl\"\r\n        placeholder=\"请输入swagger地址，默认会覆盖所有数据，如需修改请移动接口到个人项目\"\r\n      ></el-input>\r\n      <el-input\r\n        v-model=\"syncSwaggerApiVar\"\r\n        placeholder=\"请输入接口服务请求前缀变量\"\r\n      ></el-input>\r\n    </el-col>\r\n    <el-col :span=\"4\">\r\n      <el-button @click=\"syncSwaggerApi\">同步</el-button>\r\n    </el-col>\r\n  </el-row>\r\n\r\n  <h1>\r\n    获取到当前后端服务前缀地址信息为：{{ syncSwaggerApiUrl }}\r\n    ，请手动配置全局变量\r\n  </h1>\r\n  <h1>共计同步 {{ apiSize }} 个接口</h1>\r\n\r\n  <h2>历史同步URL列表</h2>\r\n  <h3 v-for=\"(item, index) in syncHistorySwaggerApiUrl\">\r\n    <h4>swagger地址：{{ item.split('@@')?.[0] || '' }}</h4>\r\n\r\n    <h4>请求前缀: {{ item.split('@@')?.[1] || '' }}</h4>\r\n  </h3>\r\n</template>\r\n\r\n<style scoped></style>\r\n",
     meta: {
       revision: 0,
-      created: 1705850707527,
+      created: 1706799294514,
       version: 0,
     },
     $loki: 7,
-  },
-  {
-    id: 'b812f7cae8c',
-    name: '新增插件',
-    sfc: "<template>\r\n\r\n</template>\r\n\r\n<script setup>\r\nimport { ref } from 'vue'\r\n</script>\r\n",
-    meta: {
-      revision: 0,
-      created: 1705850707527,
-      version: 0,
-    },
-    $loki: 8,
-  },
-  {
-    id: '06765187c74',
-    name: '新增插件',
-    sfc: "<template>\r\n\r\n</template>\r\n\r\n<script setup>\r\nimport { ref } from 'vue'\r\n</script>\r\n",
-    meta: {
-      revision: 0,
-      created: 1705850707527,
-      version: 0,
-    },
-    $loki: 9,
   },
   {
     id: 'bce9079eb76',
@@ -104,7 +71,7 @@ export const pluginsData = [
     sfc: '<script setup>\r\nimport { ref, onMounted } from \'vue\'\r\n\r\nconst collections = ref(window.db.collections.map((item) => item.name) || [])\r\n\r\nconst selectDbName = ref(window.localStorage.getItem(\'selectDbName\') || null)\r\n\r\n// 读取API\r\nconst editorContent = ref(\r\n  JSON.stringify(\r\n    window.posttiger.db(\'VariablePlugin\').collection.findOne() || {},\r\n    null,\r\n    2,\r\n  ),\r\n)\r\n\r\nconst showEditor = ref(false)\r\nconst changeSelectDbName = (value) => {\r\n  window.localStorage.setItem(\'selectDbName\', selectDbName.value)\r\n  editorContent.value = JSON.stringify(\r\n    window.posttiger.db(value).collection.find() || {},\r\n    null,\r\n    2,\r\n  )\r\n  showEditor.value = false\r\n  setTimeout(() => {\r\n    showEditor.value = true\r\n  }, 100)\r\n}\r\n\r\nif (selectDbName.value) {\r\n  changeSelectDbName(selectDbName.value)\r\n}\r\n\r\nconst saveVariable = () => {\r\n  window.posttiger\r\n    .db(selectDbName.value)\r\n    .cleanInsert(JSON.parse(editorContent.value))\r\n  window.services.ui.ElMessage.success(\'保存成功\')\r\n}\r\n</script>\r\n\r\n<template>\r\n  <el-alert\r\n    title="修改数据前，请先使用数据备份插件备份数据或者手动备份数据！！！"\r\n    type="error"\r\n    effect="dark"\r\n  ></el-alert>\r\n  <br />\r\n  <el-select v-model="selectDbName" @change="changeSelectDbName">\r\n    <el-option v-for="(item, index) in collections" :value="item">\r\n      {{ item }}\r\n    </el-option>\r\n  </el-select>\r\n  <el-button @click="saveVariable">保存</el-button>\r\n\r\n  <el-row :gutter="20" v-if="showEditor" style="margin-top: 5px">\r\n    <el-col :span="24">\r\n      <div style="height: 80vh">\r\n        <Editor\r\n          language="json"\r\n          :code="editorContent"\r\n          @changeData="\r\n            (value) => {\r\n              editorContent = value\r\n            }\r\n          "\r\n        ></Editor>\r\n      </div>\r\n    </el-col>\r\n  </el-row>\r\n</template>\r\n\r\n<style scoped></style>\r\n\r\n',
     meta: {
       revision: 0,
-      created: 1705850707527,
+      created: 1706799294514,
       version: 0,
     },
     $loki: 10,
@@ -115,7 +82,7 @@ export const pluginsData = [
     sfc: '<script setup>\r\nimport { ref, onMounted } from \'vue\'\r\n\r\nlet directoryNode = window.posttiger.node.collection.find({\r\n  nodeType: \'directory\',\r\n})\r\n\r\ndirectoryNode = directoryNode.map((item) => {\r\n  delete item.children\r\n  return {\r\n    id: item.id,\r\n    label: item.label,\r\n  }\r\n})\r\n\r\nconst collections = ref(directoryNode || [])\r\n\r\nconst selectNodeName = ref(\r\n  window.localStorage.getItem(\'selectNodeName\') || null,\r\n)\r\n\r\n// 读取API\r\nconst editorContent = ref(\r\n  JSON.stringify(\r\n    window.posttiger\r\n      .db(\'nodeConfig\')\r\n      .collection.findOne({ id: selectNodeName.value }) || {},\r\n    null,\r\n    2,\r\n  ),\r\n)\r\n\r\nconst showEditor = ref(false)\r\nconst changeSelectDbName = (value) => {\r\n  editorContent.value = JSON.stringify(\r\n    window.posttiger.db(\'nodeConfig\').collection.findOne({ id: value })\r\n      ?.headers || {},\r\n    null,\r\n    2,\r\n  )\r\n  window.localStorage.setItem(\'selectNodeName\', selectNodeName.value)\r\n  showEditor.value = false\r\n  setTimeout(() => {\r\n    showEditor.value = true\r\n  }, 100)\r\n}\r\n\r\nif (selectNodeName.value) {\r\n  changeSelectDbName(selectNodeName.value)\r\n}\r\n\r\nconst saveVariable = () => {\r\n  window.posttiger.db(\'nodeConfig\').insertOrUpdate(\r\n    { id: selectNodeName.value },\r\n    {\r\n      id: selectNodeName.value,\r\n      headers: JSON.parse(editorContent.value),\r\n    },\r\n  )\r\n  window.services.ui.ElMessage.success(\'保存成功\')\r\n}\r\n\r\nlet timer = null\r\nconst changeData = (value) => {\r\n  editorContent.value = value\r\n  if (timer != null) {\r\n    clearTimeout(timer)\r\n    timer = null\r\n  }\r\n  timer = setTimeout(() => {\r\n    // 保存配置\r\n    saveVariable()\r\n  }, 1000)\r\n}\r\n\r\nonMounted(() => {\r\n  console.log(\'注册公共参数配置插件\')\r\n  window.posttiger.plugins.register({\r\n    name: \'公共参数配置插件\',\r\n    beforePost: (apiInfo) => {\r\n      // 获取当前环境\r\n      let envVariableJson = window.posttiger\r\n        .db(\'VariablePlugin\')\r\n        .collection.findOne()\r\n      if (!envVariableJson || !envVariableJson.globalEnv) {\r\n        console.error(\r\n          \'从数据库VariablePlugin获取全局环境变量异常，请检查是否有全局变量内置插件\',\r\n        )\r\n        return\r\n      }\r\n      /**\r\n       * {\r\n       *   "globalEnv": "dev",\r\n       *   "envProps": {\r\n       *     "globalEnv": {\r\n       *       "dev": {\r\n       *         "url": "http://localhost:8080/",\r\n       *         "token": "123"\r\n       *       },\r\n       *       "test": {\r\n       *         "url": "http://localhost:8081/",\r\n       *         "token": "123"\r\n       *       }\r\n       *     }\r\n       *   }\r\n       * }\r\n       */\r\n      let globalEnvKey = envVariableJson.globalEnv\r\n      let globalEnvData = envVariableJson.envProps.globalEnv[globalEnvKey]\r\n\r\n      // 根据当前节点ID获取父节点信息\r\n      console.log(apiInfo.id)\r\n      let parentIds = window.posttiger.node.findAllParentNodeById(apiInfo.id)\r\n      //遍历父节点信息，优先找到以他为主\r\n      for (let parentId of parentIds) {\r\n        window.posttiger.node.collection.find({ id: parentId })\r\n        let headers = window.posttiger\r\n          .db(\'nodeConfig\')\r\n          .collection.findOne({ id: parentId })?.headers\r\n        if (headers) {\r\n          console.log(\r\n            \'当前父节点\' +\r\n              parentId +\r\n              \'配置了公共请求头参数，以父节点请求头为准\',\r\n          )\r\n          apiInfo.headers = headers\r\n          break\r\n        }\r\n      }\r\n      // 替换url、支持mockjs使用\r\n      for (let key in globalEnvData) {\r\n        // 替换header信息\r\n        for (let h in apiInfo.headers) {\r\n          apiInfo.headers[h] = (apiInfo.headers[h] + \'\').replaceAll(\r\n            \'{{\' + h + \'}}\',\r\n            apiInfo.headers[h],\r\n          )\r\n          apiInfo.headers[h] = window.lib.Mock.mock(apiInfo.headers[h])\r\n        }\r\n      }\r\n    },\r\n    afterPost: (apiInfo) => {\r\n      console.log(apiInfo)\r\n    },\r\n    enable: true,\r\n  })\r\n})\r\n</script>\r\n\r\n<template>\r\n  <el-select v-model="selectNodeName" @change="changeSelectDbName" filterable>\r\n    <el-option\r\n      v-for="(item, index) in collections"\r\n      :value="item.id"\r\n      :label="item.label"\r\n    ></el-option>\r\n  </el-select>\r\n  <el-button @click="saveVariable">保存</el-button>\r\n\r\n  <h1>公共请求头参数</h1>\r\n\r\n  <el-row :gutter="20" v-if="showEditor" style="margin-top: 5px">\r\n    <el-col :span="24">\r\n      <div style="height: 30vh">\r\n        <Editor\r\n          language="json"\r\n          :code="editorContent"\r\n          @changeData="changeData"\r\n        ></Editor>\r\n      </div>\r\n    </el-col>\r\n  </el-row>\r\n</template>\r\n\r\n<style scoped></style>\r\n',
     meta: {
       revision: 0,
-      created: 1705850707527,
+      created: 1706799294514,
       version: 0,
     },
     $loki: 11,

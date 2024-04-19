@@ -45,7 +45,7 @@
         </el-row>
       </el-col>
       <el-col :span="8">
-        <el-button-group class="ml-4">
+        <el-button-group style="margin-right: 5px">
           <el-button type="success" @click="send">发送</el-button>
           <el-button type="primary" @click="savaApiInfo">保存</el-button>
           <el-button type="warning" @click="cloneApi">克隆</el-button>

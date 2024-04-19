@@ -1,6 +1,6 @@
 {
   "name": "posttiger",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "author": "zhonglunsheng",
   "description": "An out-of-the-box online debugging API tool based on a web browser",
   "main": "index.js",

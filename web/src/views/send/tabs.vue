@@ -21,10 +21,14 @@
           <el-icon v-if="item.state">
             <WarningFilled color="#F56C6C" />
           </el-icon>
-          <el-icon v-else-if="item.content?.nodeType === 'api'">
+          <el-icon
+            v-else-if="item.content?.nodeType === constant.NODE_TYPE.API"
+          >
             <DocumentAdd />
           </el-icon>
-          <el-icon v-else>
+          <el-icon
+            v-else-if="item.content?.nodeType === constant.NODE_TYPE.USER_CASE"
+          >
             <StarFilled />
           </el-icon>
           <span>&nbsp;{{ item.content.label }}</span>
@@ -258,7 +262,7 @@ function removeTabByApiId(id) {
 
 onMounted(() => {
   bus.on(constant.BUS.OPEN_API_DETAIL, (node) => {
-    console.log(node, 'openApiDetail')
+    console.log(node, 'openApiDetail', node.id)
     let apiInfoItem = window.posttiger
       .db('apiList')
       .collection.findOne({ id: node.id })
